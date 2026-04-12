@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, LogOut, LogIn, ChevronDown, UserPlus, MessageSquare, LayoutDashboard, X, Home as HomeIcon, Info, FolderOpen, Newspaper, Heart } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -16,6 +16,18 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const closeTimeout = useRef<any>(null);
+
+  const handleMouseEnter = (id: string) => {
+    if (closeTimeout.current) clearTimeout(closeTimeout.current);
+    setActiveDropdown(id);
+  };
+
+  const handleMouseLeave = () => {
+    closeTimeout.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 150); // Small 150ms grace period
+  };
   const location = useLocation();
   const { t, language, setLanguage } = useLanguage();
 
@@ -65,20 +77,26 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             {t('nav.home')}
           </Link>
 
-          <div className="relative group" onMouseEnter={() => setActiveDropdown('about')} onMouseLeave={() => setActiveDropdown(null)}>
+          <div 
+            className="relative group" 
+            onMouseEnter={() => handleMouseEnter('about')} 
+            onMouseLeave={handleMouseLeave}
+          >
             <button className={`flex items-center space-x-1 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest transition-all ${isActive('/about') ? 'text-brand-pink bg-brand-pink/5' : 'text-slate-600 hover:text-brand-pink'}`}>
               <span>{t('nav.about')}</span>
               <ChevronDown className={`h-3 w-3 transition-transform duration-300 ${activeDropdown === 'about' ? 'rotate-180' : ''}`} />
             </button>
-            <div className={`absolute left-0 mt-2 w-48 bg-white border border-slate-100 shadow-2xl rounded-[1.5rem] p-2 transition-all transform origin-top ${activeDropdown === 'about' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 pointer-events-none -translate-y-2'}`}>
-              <Link to="/about/staff" className="flex items-center space-x-2 px-4 py-3 rounded-xl text-[10px] font-black text-slate-600 hover:bg-slate-50 hover:text-brand-pink uppercase tracking-widest transition-all">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-lime"></div>
-                <span>{t('nav.staff')}</span>
-              </Link>
-              <Link to="/about/mission" className="flex items-center space-x-2 px-4 py-3 rounded-xl text-[10px] font-black text-slate-600 hover:bg-slate-50 hover:text-brand-pink uppercase tracking-widest transition-all">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-pink"></div>
-                <span>{t('nav.mission')}</span>
-              </Link>
+            <div className={`absolute left-0 top-full pt-2 w-48 transition-all transform origin-top ${activeDropdown === 'about' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 pointer-events-none -translate-y-2'}`}>
+              <div className="bg-white border border-slate-100 shadow-2xl rounded-[1.5rem] p-2">
+                <Link to="/about/staff" className="flex items-center space-x-2 px-4 py-3 rounded-xl text-[10px] font-black text-slate-600 hover:bg-slate-50 hover:text-brand-pink uppercase tracking-widest transition-all">
+                  <div className="w-1.5 h-1.5 rounded-full bg-brand-lime"></div>
+                  <span>{t('nav.staff')}</span>
+                </Link>
+                <Link to="/about/mission" className="flex items-center space-x-2 px-4 py-3 rounded-xl text-[10px] font-black text-slate-600 hover:bg-slate-50 hover:text-brand-pink uppercase tracking-widest transition-all">
+                  <div className="w-1.5 h-1.5 rounded-full bg-brand-pink"></div>
+                  <span>{t('nav.mission')}</span>
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -86,24 +104,30 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             {t('nav.projects')}
           </Link>
 
-          <div className="relative group" onMouseEnter={() => setActiveDropdown('news')} onMouseLeave={() => setActiveDropdown(null)}>
+          <div 
+            className="relative group" 
+            onMouseEnter={() => handleMouseEnter('news')} 
+            onMouseLeave={handleMouseLeave}
+          >
             <button className={`flex items-center space-x-1 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest transition-all ${isActive('/news') ? 'text-brand-pink bg-brand-pink/5' : 'text-slate-600 hover:text-brand-pink'}`}>
               <span>{t('nav.news')}</span>
               <ChevronDown className={`h-3 w-3 transition-transform duration-300 ${activeDropdown === 'news' ? 'rotate-180' : ''}`} />
             </button>
-            <div className={`absolute left-0 mt-2 w-56 bg-white border border-slate-100 shadow-2xl rounded-[1.5rem] p-2 transition-all transform origin-top ${activeDropdown === 'news' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 pointer-events-none -translate-y-2'}`}>
-              <Link to="/news/latest" className="flex items-center space-x-2 px-4 py-3 rounded-xl text-[10px] font-black text-slate-600 hover:bg-slate-50 hover:text-brand-pink uppercase tracking-widest transition-all">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-pink"></div>
-                <span>{t('news.title.latest')}</span>
-              </Link>
-              <Link to="/news/reports" className="flex items-center space-x-2 px-4 py-3 rounded-xl text-[10px] font-black text-slate-600 hover:bg-slate-50 hover:text-brand-cyan uppercase tracking-widest transition-all">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-cyan"></div>
-                <span>{t('news.title.reports')}</span>
-              </Link>
-              <Link to="/news/media" className="flex items-center space-x-2 px-4 py-3 rounded-xl text-[10px] font-black text-slate-600 hover:bg-slate-50 hover:text-brand-orange uppercase tracking-widest transition-all">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-orange"></div>
-                <span>{t('news.title.media')}</span>
-              </Link>
+            <div className={`absolute left-0 top-full pt-2 w-56 transition-all transform origin-top ${activeDropdown === 'news' ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 pointer-events-none -translate-y-2'}`}>
+              <div className="bg-white border border-slate-100 shadow-2xl rounded-[1.5rem] p-2">
+                <Link to="/news/latest" className="flex items-center space-x-2 px-4 py-3 rounded-xl text-[10px] font-black text-slate-600 hover:bg-slate-50 hover:text-brand-pink uppercase tracking-widest transition-all">
+                  <div className="w-1.5 h-1.5 rounded-full bg-brand-pink"></div>
+                  <span>{t('news.title.latest')}</span>
+                </Link>
+                <Link to="/news/reports" className="flex items-center space-x-2 px-4 py-3 rounded-xl text-[10px] font-black text-slate-600 hover:bg-slate-50 hover:text-brand-cyan uppercase tracking-widest transition-all">
+                  <div className="w-1.5 h-1.5 rounded-full bg-brand-cyan"></div>
+                  <span>{t('news.title.reports')}</span>
+                </Link>
+                <Link to="/news/media" className="flex items-center space-x-2 px-4 py-3 rounded-xl text-[10px] font-black text-slate-600 hover:bg-slate-50 hover:text-brand-orange uppercase tracking-widest transition-all">
+                  <div className="w-1.5 h-1.5 rounded-full bg-brand-orange"></div>
+                  <span>{t('news.title.media')}</span>
+                </Link>
+              </div>
             </div>
           </div>
 

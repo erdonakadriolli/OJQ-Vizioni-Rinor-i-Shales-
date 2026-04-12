@@ -8,11 +8,9 @@ export default async function handler(req, res) {
 
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-    const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash",
-      contents: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
-      config: {
-        systemInstruction: `Ju jeni VIZIONI AI, asistenti inteligjent dhe zyrtar i OJQ "Vizioni Rinor i Shalës" (VRSH). 
+    const result = await ai.models.generateContent({
+      model: "gemini-flash-latest",
+      systemInstruction: `Ju jeni VIZIONI AI, asistenti inteligjent dhe zyrtar i OJQ "Vizioni Rinor i Shalës" (VRSH). 
         Përgjigjuni gjithmonë në gjuhën shqipe, jini profesional, miqësor dhe pozitiv. Kur ju pyesin për emrin, thuani: "Unë jam VIZIONI AI".
 
         RREGULLAT E FORMATIMIT DHE DREJTSHKRIMIT (SHUMË TË RËNDËSISHME):
@@ -44,19 +42,16 @@ export default async function handler(req, res) {
         - Asambleja: Euresa Karpuzi (Kryesuese), Miranda Karpuzi, Erdona Kadriolli, Erjona Kadriolli, Viola Hetemi, Bleriana Kadriolli.
 
         SI TË ANËTARËSOHESH:
-        Të rinjtë mund të bëhen pjesë duke marrë pjesë në aktivitete, duke u bërë vullnetarë ose duke kontribuar me ide të reja. VRSH inkurajon çdo zë të ri.
+        Të rinjtë mund të bëhen pjesë duke marrë pjesë në aktivitete, duke u bërë vullnetarë ose duke kontribuar med ide të reja. VRSH inkurajon çdo zë të ri.
 
         KRIJUESI I WEBSITE-IT:
         Kjo platformë është punuar nga ERDONA KADRIOLLI. Përgjigjuni me krenari për këtë fakt.`,
-        generationConfig: {
-          temperature: 0.7,
-        },
-      }
+      contents: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
     });
 
-    res.status(200).json({ text: response.text || "Më falni, ka ndodhur një gabim." });
+    res.status(200).json({ text: result.text || "Më falni, ka ndodhur një gabim." });
   } catch (err) {
     console.error(err);
-    res.status(200).json({ text: `[Raporti Diagnostikues i Gabimit Vercel]: ${err.message}. Të lutem kontrollo gjithashtu nëse po e teston në localhost apo në domainin Vercel.` });
+    res.status(200).json({ text: `VIZIONI AI është përkohësisht i padisponueshëm. Gabimi: ${err.message}` });
   }
 }

@@ -12,7 +12,7 @@ import { motion } from 'motion/react';
 import { 
   Users, Shield, Rocket, Target, 
   Heart, X, Facebook, Instagram, Linkedin, 
-  Sparkles, Mail, Star, Quote, Award, Zap
+  Mail, Star, Quote, Award
 } from 'lucide-react';
 
 interface AboutProps {
@@ -75,10 +75,7 @@ const About: React.FC<AboutProps> = ({ user }) => {
       {/* Premium Hero Mission Split */}
       <section className="grid lg:grid-cols-12 gap-16 items-center pt-8">
         <div className="lg:col-span-7 space-y-8">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 bg-brand-pink/5 text-brand-pink rounded-full text-[8px] font-black uppercase tracking-[0.4em]">
-            <Zap className="h-3 w-3 fill-current" />
-            <span>{t('about.hero.badge')}</span>
-          </div>
+
           <h1 className="text-4xl md:text-7xl text-brand-dark uppercase tracking-tighter leading-[0.9] font-black">
             <EditableText translationKey="about.hero.title1" /> <br/>
             <span className="text-brand-pink italic underline decoration-brand-lime/30 underline-offset-8">
@@ -218,10 +215,7 @@ const About: React.FC<AboutProps> = ({ user }) => {
       {/* Executive Spotlight */}
       <section>
         <div className="flex flex-col items-center mb-24">
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 bg-brand-pink/5 text-brand-pink rounded-full text-[9px] font-black uppercase tracking-[0.4em] mb-4">
-            <Sparkles className="h-3 w-3" />
-            <span>{t('nav.staff')}</span>
-          </div>
+
           <h2 className="text-4xl md:text-7xl font-black text-brand-dark uppercase tracking-tighter text-center leading-none">
             <EditableText translationKey="about.staff.title" />
           </h2>
@@ -254,10 +248,7 @@ const About: React.FC<AboutProps> = ({ user }) => {
       {/* Members Assembly Section */}
       <section className="max-w-6xl mx-auto px-4">
         <div className="flex flex-col items-center mb-16">
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 bg-brand-cyan/5 text-brand-cyan rounded-full text-[9px] font-black uppercase tracking-[0.4em] mb-4">
-            <Users className="h-3 w-3" />
-            <span>{t('about.structure.title')}</span>
-          </div>
+
           <h2 className="text-3xl md:text-6xl font-black text-brand-dark uppercase tracking-tighter text-center mb-4 leading-none">
             <EditableText translationKey="about.structure.assembly" />
           </h2>
@@ -287,10 +278,7 @@ const About: React.FC<AboutProps> = ({ user }) => {
       {/* Board of Directors */}
       <section>
         <div className="flex flex-col items-center mb-24">
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 bg-brand-blue/5 text-brand-blue rounded-full text-[9px] font-black uppercase tracking-[0.4em] mb-4">
-            <Shield className="h-3 w-3" />
-            <span>{t('about.structure.board')}</span>
-          </div>
+
           <h2 className="text-3xl md:text-6xl font-black text-brand-dark uppercase tracking-tighter text-center leading-none">
             <EditableText translationKey="about.structure.board" />
           </h2>
@@ -322,10 +310,7 @@ const About: React.FC<AboutProps> = ({ user }) => {
       {/* Volunteers */}
       <section>
         <div className="flex flex-col items-center mb-24">
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 bg-brand-lime/5 text-brand-lime rounded-full text-[9px] font-black uppercase tracking-[0.4em] mb-4">
-            <Heart className="h-3 w-3" />
-            <span>{t('about.structure.volunteers')}</span>
-          </div>
+
           <h2 className="text-3xl md:text-6xl font-black text-brand-dark uppercase tracking-tighter text-center leading-none">
             <EditableText translationKey="about.structure.volunteers" />
           </h2>

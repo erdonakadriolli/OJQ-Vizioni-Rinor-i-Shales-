@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ArrowRight, UserPlus, Bot, MessageSquare, Sparkles, Star, Globe, Shield, Handshake,
+  ArrowRight, UserPlus, Bot, MessageSquare, Sparkles, Star, Globe, Shield,
   Target, Heart, Users, Briefcase, GraduationCap, Trophy
 } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -213,10 +213,7 @@ const Home: React.FC = () => {
         <section className="py-24 px-6 overflow-hidden bg-white">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col items-center text-center mb-16">
-              <div className="inline-flex items-center space-x-2 px-4 py-2 bg-brand-orange/10 text-brand-orange rounded-full text-[9px] font-black uppercase tracking-[0.3em] mb-4">
-                <Handshake className="h-3 w-3" />
-                <span>Bashkëpunimi</span>
-              </div>
+
               <h2 className="text-4xl md:text-5xl font-black text-brand-dark uppercase tracking-tighter">
                 {t('home.partners.title')}
               </h2>
