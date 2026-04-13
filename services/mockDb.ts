@@ -79,7 +79,7 @@ const initialData: DbSchema = {
     { id: 's1', name: 'Leotrim Pajaziti', role: 'Executive Director', category: 'Executive Director', bio: 'Udhëheqësi i vizionit dhe projekteve të organizatës.', image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=400', socials: {} },
     { id: 's2', name: 'Bleriana Kadriolli', role: 'Project Assistant', category: 'Current Staff', bio: 'Mbështetje në koordinimin dhe zbatimin e aktiviteteve.', image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400', socials: {} },
     { id: 's3', name: 'Dijellëza Selmani', role: 'Project Assistant', category: 'Current Staff', bio: 'Përgjegjëse për mbarëvajtjen e trajnimeve.', image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=400', socials: {} },
-    
+
     // Asambleja
     { id: 's4', name: 'Euresa Karpuzi', role: 'Head of Members Assembly', category: 'Members Assembly', bio: 'Kryetare e Asamblesë së Anëtarëve.', image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=400', socials: {} },
     { id: 's5', name: 'Miranda Karpuzi', role: 'Assembly Member', category: 'Members Assembly', bio: '', image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=400', socials: {} },
@@ -90,7 +90,7 @@ const initialData: DbSchema = {
     // Bordi
     { id: 's6', name: 'Shkelzen Karpuzi', role: 'Board Director', category: 'Board of Directors', bio: '', image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=400', socials: {} },
     { id: 's7', name: 'Burim Shamolli', role: 'Board Director', category: 'Board of Directors', bio: '', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=400', socials: {} },
-    
+
     // Vullnetarët
     { id: 'v1', name: 'Viola Hetemi', role: 'Volunteer', category: 'Volunteers', bio: '', image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=400', socials: {} },
     { id: 'v4', name: 'Egzona Hetemi', role: 'Volunteer', category: 'Volunteers', bio: '', image: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=400', socials: {} },

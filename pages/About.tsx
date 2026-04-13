@@ -334,28 +334,28 @@ const About: React.FC<AboutProps> = ({ user }) => {
 
       {/* Luxury Modal */}
       {selectedMember && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 bg-brand-dark/95 backdrop-blur-xl animate-in fade-in duration-500">
-           <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden relative animate-in zoom-in duration-400">
-              <button onClick={() => setSelectedMember(null)} className="absolute top-8 right-8 p-4 bg-slate-50 hover:bg-brand-pink hover:text-white rounded-full transition-all z-20 shadow-sm"><X className="h-5 w-5" /></button>
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
+           <div className="bg-white w-full max-w-3xl rounded-[2rem] shadow-2xl overflow-hidden relative animate-in zoom-in duration-300">
+              <button onClick={() => setSelectedMember(null)} className="absolute top-4 right-4 p-3 bg-slate-50 hover:bg-brand-pink hover:text-white rounded-full transition-all z-20 shadow-sm"><X className="h-4 w-4" /></button>
               <div className="flex flex-col md:flex-row h-full">
-                 <div className="w-full md:w-1/2 aspect-square bg-slate-100">
+                 <div className="w-full md:w-[35%] aspect-square md:aspect-[4/5] bg-slate-100">
                     <img src={selectedMember.image} className="w-full h-full object-cover" />
                  </div>
-                 <div className="flex-1 p-10 md:p-12 flex flex-col justify-center">
-                    <div className="mb-8">
-                      <span className="text-[9px] font-black text-brand-pink uppercase tracking-[0.4em] mb-3 block">{selectedMember.category}</span>
-                      <h3 className="text-3xl font-black text-brand-dark uppercase tracking-tighter mb-2 leading-none">{selectedMember.name}</h3>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{selectedMember.role}</p>
+                 <div className="flex-1 p-6 md:p-10 flex flex-col justify-center">
+                    <div className="mb-4">
+                      <span className="text-[8px] font-black text-brand-pink uppercase tracking-[0.4em] mb-2 block">{selectedMember.category}</span>
+                      <h3 className="text-2xl font-black text-brand-dark uppercase tracking-tighter mb-1 leading-none">{selectedMember.name}</h3>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">{selectedMember.role}</p>
                     </div>
-                    <div className="relative mb-10">
-                       <Quote className="absolute -top-6 -left-6 h-12 w-12 text-slate-50 -z-10" />
-                       <p className="text-base text-slate-600 font-medium leading-relaxed italic relative z-10">
+                    <div className="relative mb-6">
+                       <Quote className="absolute -top-4 -left-4 h-8 w-8 text-slate-50 -z-10" />
+                       <p className="text-sm text-slate-600 font-medium leading-relaxed italic relative z-10">
                           {selectedMember.bio || "Një vizionar/e që punon pa rreshtur për të fuqizuar rininë e Shalës."}
                        </p>
                     </div>
-                    <div className="flex items-center space-x-4 pt-8 border-t border-slate-100">
-                       <a href="#" className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-brand-pink hover:text-white transition-all"><Facebook className="h-4 w-4" /></a>
-                       <a href="#" className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-brand-pink hover:text-white transition-all"><Instagram className="h-4 w-4" /></a>
+                    <div className="flex items-center space-x-3 pt-6 border-t border-slate-100">
+                       <a href="#" className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-brand-pink hover:text-white transition-all"><Facebook className="h-3.5 w-3.5" /></a>
+                       <a href="#" className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-brand-pink hover:text-white transition-all"><Instagram className="h-3.5 w-3.5" /></a>
                     </div>
                  </div>
               </div>
