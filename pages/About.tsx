@@ -9,9 +9,9 @@ import { collection, onSnapshot, query } from 'firebase/firestore';
 import Logo from '../components/Logo';
 import EditableText from '../components/EditableText';
 import { motion } from 'motion/react';
-import { 
-  Users, Shield, Rocket, Target, 
-  Heart, X, Facebook, Instagram, Linkedin, 
+import {
+  Users, Shield, Rocket, Target,
+  Heart, X, Facebook, Instagram, Linkedin,
   Mail, Star, Quote, Award
 } from 'lucide-react';
 
@@ -43,7 +43,7 @@ const About: React.FC<AboutProps> = ({ user }) => {
         .map(doc => doc.data())
         .filter(asset => asset.key === 'mission_images' && asset.type === 'image')
         .map(asset => asset.url);
-      
+
       if (images.length > 0) {
         setMissionImages(images);
       } else {
@@ -77,10 +77,10 @@ const About: React.FC<AboutProps> = ({ user }) => {
         <div className="lg:col-span-7 space-y-8">
 
           <h1 className="text-4xl md:text-7xl text-brand-dark uppercase tracking-tighter leading-[0.9] font-black">
-            <EditableText translationKey="about.hero.title1" /> <br/>
+            <EditableText translationKey="about.hero.title1" /> <br />
             <span className="text-brand-pink italic underline decoration-brand-lime/30 underline-offset-8">
               <EditableText translationKey="about.hero.title2" />
-            </span> <br/>
+            </span> <br />
             <EditableText translationKey="about.hero.title3" />
           </h1>
           <p className="text-lg text-slate-500 font-medium leading-relaxed max-w-4xl">
@@ -105,21 +105,21 @@ const About: React.FC<AboutProps> = ({ user }) => {
                   transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
                   className="absolute inset-0 rounded-[2rem] overflow-hidden border-8 border-white shadow-2xl bg-slate-100"
                 >
-                  <img 
-                    src={src} 
-                    alt={`Mission ${idx}`} 
+                  <img
+                    src={src}
+                    alt={`Mission ${idx}`}
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                     referrerPolicy="no-referrer"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/40 via-transparent to-transparent"></div>
                 </motion.div>
               ))}
-              
+
               {/* Indicators */}
               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex space-x-2">
                 {missionImages.map((_, i) => (
-                  <button 
-                    key={i} 
+                  <button
+                    key={i}
                     onClick={(e) => { e.stopPropagation(); setActiveMissionIdx(i); }}
                     className={`h-1 rounded-full transition-all duration-500 ${activeMissionIdx === i ? 'w-8 bg-brand-pink' : 'w-2 bg-white/50 hover:bg-white'}`}
                   ></button>
@@ -169,9 +169,8 @@ const About: React.FC<AboutProps> = ({ user }) => {
         <div className="grid md:grid-cols-3 gap-8">
           {[1, 2, 3].map(i => (
             <div key={i} className="bg-slate-50/50 p-6 rounded-[1.5rem] border border-slate-100 hover:bg-white hover:shadow-xl transition-all group">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white mb-8 group-hover:scale-110 transition-transform ${
-                i === 1 ? 'bg-brand-pink' : i === 2 ? 'bg-brand-cyan' : 'bg-brand-orange'
-              }`}>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-white mb-8 group-hover:scale-110 transition-transform ${i === 1 ? 'bg-brand-pink' : i === 2 ? 'bg-brand-cyan' : 'bg-brand-orange'
+                }`}>
                 {i === 1 ? <Award className="h-5 w-5" /> : i === 2 ? <Users className="h-5 w-5" /> : <Shield className="h-5 w-5" />}
               </div>
               <h4 className="text-xl font-black text-brand-dark uppercase tracking-tight mb-4">
@@ -189,22 +188,22 @@ const About: React.FC<AboutProps> = ({ user }) => {
       <section className="bg-white rounded-[2.5rem] p-8 md:p-10 border border-slate-100 flex flex-col md:flex-row items-center gap-12 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 left-0 w-1 h-full bg-brand-pink"></div>
         <div className="md:w-1/3">
-           <h3 className="text-2xl font-black text-brand-dark uppercase tracking-tight mb-4">
-             <EditableText translationKey="about.activities.title" />
-           </h3>
-           <p className="text-xs text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
-             <EditableText translationKey="about.activities.desc" multiline />
-           </p>
+          <h3 className="text-2xl font-black text-brand-dark uppercase tracking-tight mb-4">
+            <EditableText translationKey="about.activities.title" />
+          </h3>
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest leading-relaxed">
+            <EditableText translationKey="about.activities.desc" multiline />
+          </p>
         </div>
         <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
-           {[1, 2, 3, 4, 5].map(i => (
-             <div key={i} className="flex items-center space-x-4 p-4 bg-slate-50/50 rounded-2xl group hover:bg-white hover:shadow-lg hover:shadow-brand-pink/5 transition-all">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand-pink group-hover:scale-150 transition-transform"></div>
-                <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight group-hover:text-brand-dark">
-                  <EditableText translationKey={`about.activities.list${i}`} />
-                </span>
-             </div>
-           ))}
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="flex items-center space-x-4 p-4 bg-slate-50/50 rounded-2xl group hover:bg-white hover:shadow-lg hover:shadow-brand-pink/5 transition-all">
+              <div className="w-1.5 h-1.5 rounded-full bg-brand-pink group-hover:scale-150 transition-transform"></div>
+              <span className="text-[10px] font-black text-slate-600 uppercase tracking-tight group-hover:text-brand-dark">
+                <EditableText translationKey={`about.activities.list${i}`} />
+              </span>
+            </div>
+          ))}
         </div>
       </section>
     </div>
@@ -221,7 +220,7 @@ const About: React.FC<AboutProps> = ({ user }) => {
           </h2>
           <div className="w-24 h-1.5 bg-brand-pink mt-6 rounded-full"></div>
         </div>
-        
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-16 max-w-6xl mx-auto px-4">
           {[...getStaffByCategory('Executive Director'), ...getStaffByCategory('Current Staff')].map(m => (
             <div key={m.id} onClick={() => setSelectedMember(m)} className="group cursor-pointer flex flex-col items-center text-center">
@@ -253,7 +252,7 @@ const About: React.FC<AboutProps> = ({ user }) => {
             <EditableText translationKey="about.structure.assembly" />
           </h2>
           <div className="w-20 h-1 bg-brand-cyan mb-12 rounded-full"></div>
-          
+
           {/* Logo Section removed as per user request */}
           <div className="mb-12">
             {/* Logo removed */}
@@ -284,7 +283,7 @@ const About: React.FC<AboutProps> = ({ user }) => {
           </h2>
           <div className="w-20 h-1 bg-brand-blue mt-6 rounded-full"></div>
         </div>
-        
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-16 max-w-6xl mx-auto px-4">
           {getStaffByCategory('Board of Directors').map(m => (
             <div key={m.id} onClick={() => setSelectedMember(m)} className="group cursor-pointer flex flex-col items-center text-center">
@@ -316,7 +315,7 @@ const About: React.FC<AboutProps> = ({ user }) => {
           </h2>
           <div className="w-20 h-1 bg-brand-lime mt-6 rounded-full"></div>
         </div>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-12 max-w-6xl mx-auto px-4">
           {getStaffByCategory('Volunteers').map(m => (
             <div key={m.id} onClick={() => setSelectedMember(m)} className="group cursor-pointer flex flex-col items-center text-center">
@@ -335,31 +334,32 @@ const About: React.FC<AboutProps> = ({ user }) => {
       {/* Luxury Modal */}
       {selectedMember && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-white/10 backdrop-blur-xl animate-in fade-in duration-500">
-           <div className="bg-white w-full max-w-3xl rounded-[2rem] shadow-2xl overflow-hidden relative animate-in zoom-in duration-300">
-              <button onClick={() => setSelectedMember(null)} className="absolute top-4 right-4 p-3 bg-slate-50 hover:bg-brand-pink hover:text-white rounded-full transition-all z-20 shadow-sm"><X className="h-4 w-4" /></button>
-              <div className="flex flex-col md:flex-row h-full">
-                 <div className="w-full md:w-[35%] aspect-square md:aspect-[4/5] bg-slate-100">
-                    <img src={selectedMember.image} className="w-full h-full object-cover" />
-                 </div>
-                 <div className="flex-1 p-6 md:p-10 flex flex-col justify-center">
-                    <div className="mb-4">
-                      <span className="text-[8px] font-black text-brand-pink uppercase tracking-[0.4em] mb-2 block">{selectedMember.category}</span>
-                      <h3 className="text-2xl font-black text-brand-dark uppercase tracking-tighter mb-1 leading-none">{selectedMember.name}</h3>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">{selectedMember.role}</p>
-                    </div>
-                    <div className="relative mb-6">
-                       <Quote className="absolute -top-4 -left-4 h-8 w-8 text-slate-50 -z-10" />
-                       <p className="text-sm text-slate-600 font-medium leading-relaxed italic relative z-10">
-                          {selectedMember.bio || "Një vizionar/e që punon pa rreshtur për të fuqizuar rininë e Shalës."}
-                       </p>
-                    </div>
-                    <div className="flex items-center space-x-3 pt-6 border-t border-slate-100">
-                       <a href="#" className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-brand-pink hover:text-white transition-all"><Facebook className="h-3.5 w-3.5" /></a>
-                       <a href="#" className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-brand-pink hover:text-white transition-all"><Instagram className="h-3.5 w-3.5" /></a>
-                    </div>
-                 </div>
+          <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] shadow-2xl relative animate-in zoom-in duration-300">
+            <button onClick={() => setSelectedMember(null)} className="absolute top-6 right-6 p-2.5 bg-white/80 backdrop-blur-md hover:bg-brand-pink hover:text-white rounded-full transition-all z-20 shadow-sm border border-slate-100"><X className="h-4 w-4" /></button>
+            <div className="flex flex-col md:flex-row">
+              <div className="w-full md:w-[38%] h-72 md:h-auto bg-slate-50 relative overflow-hidden">
+                <img src={selectedMember.image} className="w-full h-full object-cover object-top" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent md:hidden"></div>
               </div>
-           </div>
+              <div className="flex-1 p-8 md:p-12 flex flex-col justify-center bg-white">
+                <div className="mb-4">
+                  <span className="text-[8px] font-black text-brand-pink uppercase tracking-[0.4em] mb-2 block">{selectedMember.category}</span>
+                  <h3 className="text-2xl font-black text-brand-dark uppercase tracking-tighter mb-1 leading-none">{selectedMember.name}</h3>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">{selectedMember.role}</p>
+                </div>
+                <div className="relative mb-6">
+                  <Quote className="absolute -top-4 -left-4 h-8 w-8 text-slate-50 -z-10" />
+                  <p className="text-sm text-slate-600 font-medium leading-relaxed italic relative z-10">
+                    {selectedMember.bio || "Një vizionar/e që punon pa rreshtur për të fuqizuar rininë e Shalës."}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-3 pt-6 border-t border-slate-100">
+                  <a href="#" className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-brand-pink hover:text-white transition-all"><Facebook className="h-3.5 w-3.5" /></a>
+                  <a href="#" className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-brand-pink hover:text-white transition-all"><Instagram className="h-3.5 w-3.5" /></a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -371,8 +371,8 @@ const About: React.FC<AboutProps> = ({ user }) => {
         {/* Modern Compact Switcher */}
         <div className="flex items-center justify-center mb-24">
           <div className="bg-white/60 backdrop-blur-md p-1.5 rounded-[2.5rem] border border-slate-100 shadow-lg flex items-center group">
-            <button 
-              onClick={() => window.location.hash = '#/about/mission'} 
+            <button
+              onClick={() => window.location.hash = '#/about/mission'}
               className={`px-10 py-4 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${(!section || section === 'mission') ? 'bg-brand-dark text-white shadow-xl scale-105' : 'text-slate-400 hover:text-brand-dark hover:bg-white'}`}
             >
               <div className="flex items-center space-x-2">
@@ -380,8 +380,8 @@ const About: React.FC<AboutProps> = ({ user }) => {
                 <span>{t('nav.mission')}</span>
               </div>
             </button>
-            <button 
-              onClick={() => window.location.hash = '#/about/staff'} 
+            <button
+              onClick={() => window.location.hash = '#/about/staff'}
               className={`px-10 py-4 rounded-[2rem] text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${section === 'staff' ? 'bg-brand-dark text-white shadow-xl scale-105' : 'text-slate-400 hover:text-brand-dark hover:bg-white'}`}
             >
               <div className="flex items-center space-x-2">
@@ -391,7 +391,7 @@ const About: React.FC<AboutProps> = ({ user }) => {
             </button>
           </div>
         </div>
-        
+
         {section === 'staff' ? renderStaff() : renderMission()}
       </div>
     </div>
