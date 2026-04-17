@@ -14,7 +14,12 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
   const [filter, setFilter] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const { t } = useLanguage();
+
+  useEffect(() => {
+    setShowAll(false);
+  }, [filter, searchTerm]);
 
   const filteredProjects = projects.filter(p => {
     const matchesFilter = filter === 'All' || p.status === filter;
@@ -66,7 +71,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
-          {filteredProjects.map(project => (
+          {filteredProjects.slice(0, showAll ? undefined : 9).map(project => (
             <div 
               key={project.id} 
               onClick={() => setSelectedProject(project)}
@@ -109,6 +114,19 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
             </div>
           ))}
         </div>
+
+        {!showAll && filteredProjects.length > 9 && (
+          <div className="mt-20 flex justify-center">
+            <button 
+              onClick={() => setShowAll(true)}
+              className="group relative px-12 py-5 bg-white text-brand-dark rounded-full font-black uppercase text-xs tracking-[0.2em] shadow-xl hover:shadow-2xl transition-all border border-slate-100 flex items-center gap-4 hover:-translate-y-1"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-brand-pink/5 to-brand-orange/5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <span>{t('projects.viewMore')}</span>
+              <LayoutGrid className="h-5 w-5 text-brand-pink group-hover:rotate-90 transition-transform duration-500" />
+            </button>
+          </div>
+        )}
 
         {/* Project Detail Modal */}
         {selectedProject && (
