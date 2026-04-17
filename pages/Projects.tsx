@@ -13,13 +13,14 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
   const { projects } = useFirestore();
   const [filter, setFilter] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [visibleCount, setVisibleCount] = useState(6);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const { t } = useLanguage();
 
   const filteredProjects = projects.filter(p => {
     const matchesFilter = filter === 'All' || p.status === filter;
-    const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          p.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.description.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -36,11 +37,11 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
               {t('projects.desc')}
             </p>
           </div>
-          
+
           <div className="relative group">
             <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 h-5 w-5 group-focus-within:text-brand-pink transition-colors" />
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder={t('projects.search')}
               className="pl-14 pr-8 py-4 bg-white border border-slate-200 rounded-3xl focus:ring-2 focus:ring-brand-pink outline-none w-full sm:w-80 shadow-sm font-bold transition-all text-sm"
               value={searchTerm}
@@ -66,23 +67,22 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
-          {filteredProjects.map(project => (
-            <div 
-              key={project.id} 
+          {filteredProjects.slice(0, visibleCount).map(project => (
+            <div
+              key={project.id}
               onClick={() => setSelectedProject(project)}
               className="bg-white rounded-[3rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all border border-slate-100 flex flex-col group relative cursor-pointer hover:-translate-y-2 duration-500"
             >
               <div className="relative h-72 overflow-hidden">
-                <img 
-                  src={project.image} 
-                  alt={project.title} 
+                <img
+                  src={project.image}
+                  alt={project.title}
                   className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-1000"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/90 via-brand-dark/20 to-transparent"></div>
                 <div className="absolute top-8 left-8">
-                  <span className={`px-5 py-2 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] shadow-2xl ${
-                    project.status === ProjectStatus.Active ? 'bg-brand-lime text-white' : 'bg-slate-700 text-white'
-                  }`}>
+                  <span className={`px-5 py-2 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] shadow-2xl ${project.status === ProjectStatus.Active ? 'bg-brand-lime text-white' : 'bg-slate-700 text-white'
+                    }`}>
                     {project.status === ProjectStatus.Active ? t('projects.filter.active') : t('projects.filter.completed')}
                   </span>
                 </div>
@@ -110,11 +110,25 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
           ))}
         </div>
 
+        {visibleCount < filteredProjects.length && (
+          <div className="mt-20 flex justify-center">
+            <button 
+              onClick={() => setVisibleCount(prev => prev + 6)}
+              className="group relative px-12 py-5 bg-white border border-slate-200 rounded-full text-brand-dark font-black uppercase text-[10px] tracking-[0.3em] hover:bg-brand-dark hover:text-white transition-all shadow-xl hover:shadow-brand-dark/20 flex items-center space-x-4"
+            >
+              <span>{t('projects.loadMore') || 'Shiko më shumë projekte'}</span>
+              <div className="w-8 h-8 rounded-full bg-brand-pink/10 flex items-center justify-center group-hover:bg-brand-pink/20 transition-colors">
+                <ArrowRight className="h-4 w-4 text-brand-pink group-hover:translate-x-1 transition-transform" />
+              </div>
+            </button>
+          </div>
+        )}
+
         {/* Project Detail Modal */}
         {selectedProject && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 md:p-12 bg-brand-dark/80 backdrop-blur-xl animate-in fade-in duration-300">
             <div className="bg-white w-full max-w-6xl h-full max-h-[90vh] rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col md:flex-row animate-in zoom-in duration-300">
-              <button 
+              <button
                 onClick={() => setSelectedProject(null)}
                 className="absolute top-8 right-8 z-[70] bg-white/90 backdrop-blur-sm text-brand-dark p-3 rounded-full shadow-xl hover:bg-brand-pink hover:text-white transition-all"
               >
@@ -132,7 +146,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                       <Maximize2 className="h-5 w-5" />
                     </div>
                   </div>
-                  
+
                   {/* Gallery Grid */}
                   <div className="grid grid-cols-2 gap-px bg-slate-800">
                     {selectedProject.gallery?.map((img, i) => (
@@ -142,11 +156,11 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                       </div>
                     ))}
                   </div>
-                  
+
                   {(!selectedProject.gallery || selectedProject.gallery.length === 0) && (
                     <div className="p-20 flex flex-col items-center justify-center text-slate-700 bg-slate-900">
-                       <ImageIcon className="h-12 w-12 mb-4 opacity-20" />
-                       <span className="text-[10px] font-black uppercase tracking-widest opacity-30">No additional photos</span>
+                      <ImageIcon className="h-12 w-12 mb-4 opacity-20" />
+                      <span className="text-[10px] font-black uppercase tracking-widest opacity-30">No additional photos</span>
                     </div>
                   )}
                 </div>
@@ -156,9 +170,8 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
               <div className="flex-1 p-10 md:p-16 overflow-y-auto flex flex-col bg-white">
                 <div className="mb-10">
                   <div className="flex items-center space-x-3 mb-4">
-                    <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest inline-block ${
-                      selectedProject.status === ProjectStatus.Active ? 'bg-brand-lime text-white' : 'bg-slate-200 text-slate-500'
-                    }`}>
+                    <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest inline-block ${selectedProject.status === ProjectStatus.Active ? 'bg-brand-lime text-white' : 'bg-slate-200 text-slate-500'
+                      }`}>
                       {selectedProject.status}
                     </span>
                   </div>
@@ -167,19 +180,19 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
                 </div>
 
                 <div className="space-y-8 flex-grow">
-                   <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
-                      <h4 className="text-[10px] font-black text-brand-pink uppercase tracking-[0.2em] mb-4 flex items-center">
-                        <Info className="h-4 w-4 mr-2" /> {t('projects.summary')}
-                      </h4>
-                      <p className="text-lg text-brand-dark font-semibold leading-relaxed italic">"{selectedProject.description}"</p>
-                   </div>
-                   
-                   <div>
-                      <h4 className="text-[10px] font-black text-brand-pink uppercase tracking-[0.2em] mb-4">{t('projects.impl')}</h4>
-                      <div className="text-slate-600 leading-relaxed font-medium whitespace-pre-wrap text-sm">
-                        {selectedProject.longDescription || "No additional implementation details provided for this project yet. Stay tuned for updates from our field team in Shale."}
-                      </div>
-                   </div>
+                  <div className="bg-slate-50 p-8 rounded-[2rem] border border-slate-100">
+                    <h4 className="text-[10px] font-black text-brand-pink uppercase tracking-[0.2em] mb-4 flex items-center">
+                      <Info className="h-4 w-4 mr-2" /> {t('projects.summary')}
+                    </h4>
+                    <p className="text-lg text-brand-dark font-semibold leading-relaxed italic">"{selectedProject.description}"</p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-[10px] font-black text-brand-pink uppercase tracking-[0.2em] mb-4">{t('projects.impl')}</h4>
+                    <div className="text-slate-600 leading-relaxed font-medium whitespace-pre-wrap text-sm">
+                      {selectedProject.longDescription || "No additional implementation details provided for this project yet. Stay tuned for updates from our field team in Shale."}
+                    </div>
+                  </div>
 
                 </div>
               </div>
