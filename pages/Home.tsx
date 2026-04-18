@@ -14,7 +14,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 
 const Home: React.FC = () => {
   const { t } = useLanguage();
-  const { partners, stats, siteAssets } = useFirestore();
+  const { partners, stats, siteAssets, isLoading } = useFirestore();
   const [isAdmin, setIsAdmin] = useState(false);
   const [heroImages, setHeroImages] = useState<string[]>([]);
   const [activeHeroIdx, setActiveHeroIdx] = useState(0);
@@ -28,6 +28,8 @@ const Home: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (isLoading) return; // Don't set images yet if still loading from DB
+
     const images = siteAssets
       .filter(asset => asset.key === 'hero_images' && asset.type === 'image')
       .map(asset => asset.url);
@@ -35,14 +37,14 @@ const Home: React.FC = () => {
     if (images.length > 0) {
       setHeroImages(images);
     } else {
-      // Fallback if none in DB
+      // Fallback if none in DB and NOT loading
       setHeroImages([
         "https://picsum.photos/seed/vizioni1/1920/1080",
         "https://picsum.photos/seed/vizioni2/1920/1080",
         "https://picsum.photos/seed/vizioni3/1920/1080"
       ]);
     }
-  }, [siteAssets]);
+  }, [siteAssets, isLoading]);
 
   useEffect(() => {
     if (heroImages.length === 0) return;

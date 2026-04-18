@@ -13,7 +13,7 @@ import { Project, ApplicationStatus, ProjectStatus, NewsItem, StaffMember, Volun
 import { GoogleGenAI } from "@google/genai";
 import { useLanguage, translations } from '../context/LanguageContext';
 import { useFirestore } from '../context/FirestoreContext';
-import { db as firestore, auth, handleFirestoreError, OperationType } from '../firebase';
+import { db as firestore, auth, handleFirestoreError, OperationType, uploadFileToStorage } from '../firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, addDoc, where, getDocs } from 'firebase/firestore';
 
 const AdminDashboard: React.FC = () => {
@@ -38,6 +38,7 @@ const AdminDashboard: React.FC = () => {
   const [showAppDetails, setShowAppDetails] = useState<VolunteerApplication | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [newsSearch, setNewsSearch] = useState('');
@@ -155,12 +156,19 @@ const AdminDashboard: React.FC = () => {
   const handleDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1 * 1024 * 1024) {
-        showError(language === 'AL' ? "Skedari shumë i madh (Max 1MB)." : "File too large (Max 1MB).");
-        return;
+      setIsUploading(true);
+      try {
+        const path = `reports/${Date.now()}_${file.name}`;
+        const url = await uploadFileToStorage(file, path);
+        setNewsForm(prev => ({ ...prev, fileUrl: url, fileName: file.name }));
+        setSuccessMessage(language === 'AL' ? "Dokumenti u ngarkua!" : "Document uploaded!");
+        setTimeout(() => setSuccessMessage(null), 2000);
+      } catch (err) {
+        console.error(err);
+        showError(language === 'AL' ? "Dështoi ngarkimi i dokumentit." : "Document upload failed.");
+      } finally {
+        setIsUploading(false);
       }
-      const base64 = await handleFileRead(file);
-      setNewsForm(prev => ({ ...prev, fileUrl: base64, fileName: file.name }));
     }
   };
 
@@ -336,9 +344,19 @@ const AdminDashboard: React.FC = () => {
   const handleAssetUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const base64 = await handleFileRead(file);
-      const compressed = await compressImage(base64, 1200, 800, 0.6);
-      setAssetForm(prev => ({ ...prev, url: compressed }));
+      setIsUploading(true);
+      try {
+        const path = `assets/${Date.now()}_${file.name}`;
+        const url = await uploadFileToStorage(file, path);
+        setAssetForm(prev => ({ ...prev, url: url }));
+        setSuccessMessage("Asseti u ngarkua!");
+        setTimeout(() => setSuccessMessage(null), 2000);
+      } catch (err) {
+        console.error(err);
+        showError("Dështoi ngarkimi i assetit.");
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -364,9 +382,19 @@ const AdminDashboard: React.FC = () => {
   const handlePartnerLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const base64 = await handleFileRead(file);
-      const compressed = await compressImage(base64, 300, 300, 0.7);
-      setPartnerForm(prev => ({ ...prev, logo: compressed }));
+      setIsUploading(true);
+      try {
+        const path = `partners/${Date.now()}_${file.name}`;
+        const url = await uploadFileToStorage(file, path);
+        setPartnerForm(prev => ({ ...prev, logo: url }));
+        setSuccessMessage("Logo u ngarkua!");
+        setTimeout(() => setSuccessMessage(null), 2000);
+      } catch (err) {
+        console.error(err);
+        showError("Dështoi ngarkimi i logos.");
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -374,19 +402,28 @@ const AdminDashboard: React.FC = () => {
     const files = e.target.files;
     if (!files) return;
 
-    // Limit total gallery images to 8
     if (projectForm.gallery.length + files.length > 8) {
       showError(language === 'AL' ? "Maksimumi 8 foto në galeri." : "Maximum 8 photos in gallery.");
       return;
     }
 
-    const newImages: string[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const base64 = await handleFileRead(files[i]);
-      const compressed = await compressImage(base64, 800, 600, 0.6);
-      newImages.push(compressed);
+    setIsUploading(true);
+    try {
+      const newImages: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const path = `projects/gallery/${Date.now()}_${files[i].name}`;
+        const url = await uploadFileToStorage(files[i], path);
+        newImages.push(url);
+      }
+      setProjectForm(prev => ({ ...prev, gallery: [...prev.gallery, ...newImages] }));
+      setSuccessMessage("Fotot e galerisë u ngarkuan!");
+      setTimeout(() => setSuccessMessage(null), 2000);
+    } catch (err) {
+      console.error(err);
+      showError("Dështoi ngarkimi i galerisë.");
+    } finally {
+      setIsUploading(false);
     }
-    setProjectForm(prev => ({ ...prev, gallery: [...prev.gallery, ...newImages] }));
   };
 
   const generateWithAi = async (promptType: 'project' | 'news') => {
@@ -1231,33 +1268,74 @@ const AdminDashboard: React.FC = () => {
                 <textarea rows={4} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-sm outline-none resize-none focus:ring-2 focus:ring-brand-lime/20 focus:border-brand-lime transition-all" value={newsForm.content} onChange={e => setNewsForm(prev => ({ ...prev, content: e.target.value }))} />
               </div>
               <div className="space-y-4 p-6 bg-slate-50/50 rounded-3xl border border-slate-100 shadow-inner">
-                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
-                  {newsForm.category === 'Reports' ? 'Ngarko Dokument (PDF/DOC)' : 'Linku i Burimit / URL'}
-                </label>
-                {newsForm.category === 'Reports' ? (
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
+                    Burimi i Dokumentit / Media
+                  </label>
+                  {newsForm.category === 'Reports' && (
+                    <span className="text-[8px] font-bold text-brand-pink uppercase tracking-tighter">
+                      Max 1MB për upload
+                    </span>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 gap-4">
+                  {/* File Upload Option */}
                   <div className="space-y-3">
-                    <div onClick={() => reportFileRef.current?.click()} className="cursor-pointer py-8 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center bg-white hover:bg-slate-100 transition-all relative group shadow-sm">
+                    <div 
+                      onClick={() => reportFileRef.current?.click()} 
+                      className={`cursor-pointer py-4 border-2 border-dashed rounded-2xl flex flex-col items-center justify-center transition-all relative group shadow-sm ${
+                        newsForm.fileName ? 'border-brand-cyan bg-brand-cyan/5' : 'border-slate-200 bg-white hover:bg-slate-100'
+                      }`}
+                    >
                       {newsForm.fileName ? (
                         <div className="flex items-center text-brand-cyan">
-                          <File className="h-6 w-6 mr-3" />
-                          <span className="text-sm font-bold">{newsForm.fileName}</span>
-                          <button onClick={(e) => { e.stopPropagation(); setNewsForm(prev => ({ ...prev, fileName: '', fileUrl: '' })); }} className="ml-3 p-1.5 bg-red-500 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all"><X className="h-4 w-4" /></button>
+                          <File className="h-5 w-5 mr-3" />
+                          <span className="text-xs font-bold truncate max-w-[200px]">{newsForm.fileName}</span>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setNewsForm(prev => ({ ...prev, fileName: '', fileUrl: '' })); }} 
+                            className="ml-3 p-1 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
                         </div>
                       ) : (
-                        <>
-                          <Upload className="h-6 w-6 text-slate-300 mb-2 group-hover:scale-110 transition-transform" />
-                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{t('ui.upload')}</span>
-                        </>
+                        <div className="flex items-center space-x-3">
+                          <Upload className="h-4 w-4 text-slate-300 group-hover:scale-110 transition-transform" />
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                            {language === 'AL' ? "Ngarko Dokument (Max 1MB)" : "Upload Document (Max 1MB)"}
+                          </span>
+                        </div>
                       )}
                     </div>
                     <input type="file" hidden ref={reportFileRef} accept=".pdf,.doc,.docx" onChange={handleDocUpload} />
                   </div>
-                ) : (
+
+                  <div className="relative flex items-center">
+                    <div className="flex-grow h-px bg-slate-200"></div>
+                    <span className="px-3 text-[8px] font-black text-slate-300 uppercase tracking-widest">OSE</span>
+                    <div className="flex-grow h-px bg-slate-200"></div>
+                  </div>
+
+                  {/* External Link Option */}
                   <div className="relative group">
                     <Globe className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-brand-lime transition-colors" />
-                    <input type="text" placeholder="https://..." className="w-full pl-12 pr-6 py-3.5 bg-white border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-lime/20 focus:border-brand-lime transition-all" value={newsForm.fileUrl} onChange={e => setNewsForm(prev => ({ ...prev, fileUrl: e.target.value }))} />
+                    <input 
+                      type="text" 
+                      placeholder={language === 'AL' ? "Linku i Dokumentit (Google Drive, etj)..." : "Document Link (Google Drive, etc)..."}
+                      className="w-full pl-12 pr-6 py-3.5 bg-white border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-lime/20 focus:border-brand-lime transition-all" 
+                      value={newsForm.fileUrl && !newsForm.fileUrl.startsWith('data:') ? newsForm.fileUrl : ''} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        setNewsForm(prev => ({ 
+                          ...prev, 
+                          fileUrl: val,
+                          fileName: val ? (val.length > 30 ? val.substring(0, 30) + '...' : val) : '' 
+                        }));
+                      }} 
+                    />
                   </div>
-                )}
+                </div>
               </div>
               <div className="flex gap-4 pt-4">
                 <button onClick={() => setShowNewsModal(false)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-slate-200 transition-all">{t('admin.cancel')}</button>
@@ -1346,9 +1424,19 @@ const AdminDashboard: React.FC = () => {
                   <input type="file" hidden ref={projectImageRef} accept="image/*" onChange={async e => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      const base64 = await handleFileRead(file);
-                      const compressed = await compressImage(base64, 1000, 800, 0.7);
-                      setProjectForm(prev => ({ ...prev, image: compressed }));
+                      setIsUploading(true);
+                      try {
+                        const path = `projects/hero/${Date.now()}_${file.name}`;
+                        const url = await uploadFileToStorage(file, path);
+                        setProjectForm(prev => ({ ...prev, image: url }));
+                        setSuccessMessage("Imazhi i projektit u ngarkua!");
+                        setTimeout(() => setSuccessMessage(null), 2000);
+                      } catch (err) {
+                        console.error(err);
+                        showError("Dështoi ngarkimi i imazhit.");
+                      } finally {
+                        setIsUploading(false);
+                      }
                     }
                   }} />
                 </div>
@@ -1437,9 +1525,19 @@ const AdminDashboard: React.FC = () => {
                   <input type="file" hidden ref={staffImageRef} accept="image/*" onChange={async e => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      const base64 = await handleFileRead(file);
-                      const compressed = await compressImage(base64);
-                      setStaffForm(prev => ({ ...prev, image: compressed }));
+                      setIsUploading(true);
+                      try {
+                        const path = `staff/${Date.now()}_${file.name}`;
+                        const url = await uploadFileToStorage(file, path);
+                        setStaffForm(prev => ({ ...prev, image: url }));
+                        setSuccessMessage("Foto e stafit u ngarkua!");
+                        setTimeout(() => setSuccessMessage(null), 2000);
+                      } catch (err) {
+                        console.error(err);
+                        showError("Dështoi ngarkimi i fotos.");
+                      } finally {
+                        setIsUploading(false);
+                      }
                     }
                   }} />
                 </div>
