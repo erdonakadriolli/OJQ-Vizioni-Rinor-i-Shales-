@@ -77,9 +77,9 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             {t('nav.home')}
           </Link>
 
-          <div 
-            className="relative group" 
-            onMouseEnter={() => handleMouseEnter('about')} 
+          <div
+            className="relative group"
+            onMouseEnter={() => handleMouseEnter('about')}
             onMouseLeave={handleMouseLeave}
           >
             <button className={`flex items-center space-x-1 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest transition-all ${isActive('/about') ? 'text-brand-pink bg-brand-pink/5' : 'text-slate-600 hover:text-brand-pink'}`}>
@@ -104,9 +104,9 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             {t('nav.projects')}
           </Link>
 
-          <div 
-            className="relative group" 
-            onMouseEnter={() => handleMouseEnter('news')} 
+          <div
+            className="relative group"
+            onMouseEnter={() => handleMouseEnter('news')}
             onMouseLeave={handleMouseLeave}
           >
             <button className={`flex items-center space-x-1 px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest transition-all ${isActive('/news') ? 'text-brand-pink bg-brand-pink/5' : 'text-slate-600 hover:text-brand-pink'}`}>
@@ -140,13 +140,13 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
         <div className="flex items-center space-x-2">
           {/* Language Switcher */}
           <div className="flex items-center bg-slate-50 rounded-full p-1 mr-2">
-            <button 
+            <button
               onClick={() => setLanguage('AL')}
               className={`px-2 py-1 rounded-full text-[9px] font-black transition-all ${language === 'AL' ? 'bg-white text-brand-pink shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
               AL
             </button>
-            <button 
+            <button
               onClick={() => setLanguage('EN')}
               className={`px-2 py-1 rounded-full text-[9px] font-black transition-all ${language === 'EN' ? 'bg-white text-brand-pink shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
@@ -175,9 +175,9 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
               <LogIn className="h-5 w-5" />
             </Link>
           )}
-          
-          <button 
-            onClick={() => setIsOpen(!isOpen)} 
+
+          <button
+            onClick={() => setIsOpen(!isOpen)}
             className="lg:hidden p-2.5 bg-slate-50 text-slate-600 rounded-full hover:bg-slate-100 transition-all"
             aria-label="Toggle Menu"
           >
@@ -189,7 +189,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: '100%' }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: '100%' }}
@@ -204,21 +204,21 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
               <div className="flex items-center space-x-4">
                 {/* Mobile Language Switcher */}
                 <div className="flex items-center bg-slate-50 rounded-full p-1">
-                  <button 
+                  <button
                     onClick={() => setLanguage('AL')}
                     className={`px-3 py-1.5 rounded-full text-[10px] font-black transition-all ${language === 'AL' ? 'bg-white text-brand-pink shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                   >
                     AL
                   </button>
-                  <button 
+                  <button
                     onClick={() => setLanguage('EN')}
                     className={`px-3 py-1.5 rounded-full text-[10px] font-black transition-all ${language === 'EN' ? 'bg-white text-brand-pink shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                   >
                     EN
                   </button>
                 </div>
-                <button 
-                  onClick={() => setIsOpen(false)} 
+                <button
+                  onClick={() => setIsOpen(false)}
                   className="p-3 bg-slate-50 rounded-full text-slate-500 hover:bg-brand-pink hover:text-white transition-all"
                 >
                   <X className="h-6 w-6" />
@@ -237,8 +237,8 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 + idx * 0.1 }}
                   >
-                    <Link 
-                      to={link.path} 
+                    <Link
+                      to={link.path}
                       className={`flex items-center space-x-4 text-lg font-black uppercase tracking-tighter ${link.color}`}
                     >
                       <link.icon className="h-5 w-5 opacity-20" />
@@ -249,7 +249,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
               </div>
 
               {/* About Section */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
@@ -265,7 +265,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
               </motion.div>
 
               {/* News Section */}
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 }}
@@ -283,7 +283,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
             </div>
 
             {/* Mobile Menu Footer */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}

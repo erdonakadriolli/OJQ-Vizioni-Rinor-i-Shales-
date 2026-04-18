@@ -7,15 +7,14 @@ import {
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLanguage } from '../context/LanguageContext';
+import { useFirestore } from '../context/FirestoreContext';
 import { Partner, Stat } from '../types';
-import { db as firestoreDb, auth, isAdmin as checkIsAdmin } from '../firebase';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { auth, isAdmin as checkIsAdmin } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const Home: React.FC = () => {
   const { t } = useLanguage();
-  const [partners, setPartners] = useState<Partner[]>([]);
-  const [stats, setStats] = useState<Stat[]>([]);
+  const { partners, stats, siteAssets } = useFirestore();
   const [isAdmin, setIsAdmin] = useState(false);
   const [heroImages, setHeroImages] = useState<string[]>([]);
   const [activeHeroIdx, setActiveHeroIdx] = useState(0);
@@ -29,41 +28,21 @@ const Home: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const partnersQuery = query(collection(firestoreDb, 'partners'), orderBy('name'));
-    const unsubscribePartners = onSnapshot(partnersQuery, (snapshot) => {
-      setPartners(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Partner)));
-    });
+    const images = siteAssets
+      .filter(asset => asset.key === 'hero_images' && asset.type === 'image')
+      .map(asset => asset.url);
 
-    const statsQuery = query(collection(firestoreDb, 'stats'), orderBy('label'));
-    const unsubscribeStats = onSnapshot(statsQuery, (snapshot) => {
-      setStats(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Stat)));
-    });
-
-    const assetsQuery = query(collection(firestoreDb, 'site_assets'));
-    const unsubscribeAssets = onSnapshot(assetsQuery, (snapshot) => {
-      const images = snapshot.docs
-        .map(doc => doc.data())
-        .filter(asset => asset.key === 'hero_images' && asset.type === 'image')
-        .map(asset => asset.url);
-
-      if (images.length > 0) {
-        setHeroImages(images);
-      } else {
-        // Fallback to picsum if none in DB or missing files
-        setHeroImages([
-          "https://picsum.photos/seed/vizioni1/1920/1080",
-          "https://picsum.photos/seed/vizioni2/1920/1080",
-          "https://picsum.photos/seed/vizioni3/1920/1080"
-        ]);
-      }
-    });
-
-    return () => {
-      unsubscribePartners();
-      unsubscribeStats();
-      unsubscribeAssets();
-    };
-  }, []);
+    if (images.length > 0) {
+      setHeroImages(images);
+    } else {
+      // Fallback if none in DB
+      setHeroImages([
+        "https://picsum.photos/seed/vizioni1/1920/1080",
+        "https://picsum.photos/seed/vizioni2/1920/1080",
+        "https://picsum.photos/seed/vizioni3/1920/1080"
+      ]);
+    }
+  }, [siteAssets]);
 
   useEffect(() => {
     if (heroImages.length === 0) return;

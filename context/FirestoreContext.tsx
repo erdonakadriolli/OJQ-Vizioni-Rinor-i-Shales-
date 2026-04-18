@@ -31,100 +31,73 @@ export const FirestoreProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   useEffect(() => {
     // Centralized listeners to reduce Firestore read quota consumption
-    // These listeners will run once for the entire application session
-    
     const qStaff = query(collection(db, 'staff'));
     const unsubscribeStaff = onSnapshot(qStaff, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as StaffMember));
-      console.log('Firestore Staff loaded:', data.length);
       setStaff(data);
     }, (err) => {
-      if (!err.message.includes('quota')) {
-        handleFirestoreError(err, OperationType.LIST, 'staff');
-      }
+      console.warn('Firestore staff access error:', err.message);
     });
 
     const qProjects = query(collection(db, 'projects'));
     const unsubscribeProjects = onSnapshot(qProjects, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-      // Sort in memory to avoid excluding docs with missing fields
       data.sort((a, b) => (b.startDate || '').localeCompare(a.startDate || ''));
-      console.log('Firestore Projects loaded:', data.length);
       setProjects(data);
     }, (err) => {
-      if (!err.message.includes('quota')) {
-        handleFirestoreError(err, OperationType.LIST, 'projects');
-      }
+      console.warn('Firestore projects access error:', err.message);
     });
 
     const qNews = query(collection(db, 'news'));
     const unsubscribeNews = onSnapshot(qNews, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as NewsItem));
       data.sort((a, b) => (b.datePosted || '').localeCompare(a.datePosted || ''));
-      console.log('Firestore News loaded:', data.length);
       setNews(data);
     }, (err) => {
-      if (!err.message.includes('quota')) {
-        handleFirestoreError(err, OperationType.LIST, 'news');
-      }
+      console.warn('Firestore news access error:', err.message);
     });
 
     const qPartners = query(collection(db, 'partners'));
     const unsubscribePartners = onSnapshot(qPartners, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Partner));
       data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-      console.log('Firestore Partners loaded:', data.length);
       setPartners(data);
     }, (err) => {
-      if (!err.message.includes('quota')) {
-        handleFirestoreError(err, OperationType.LIST, 'partners');
-      }
+      console.warn('Firestore partners access error:', err.message);
     });
 
     const qStats = query(collection(db, 'stats'));
     const unsubscribeStats = onSnapshot(qStats, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Stat));
-      console.log('Firestore Stats loaded:', data.length);
       setStats(data);
     }, (err) => {
-      if (!err.message.includes('quota')) {
-        handleFirestoreError(err, OperationType.LIST, 'stats');
-      }
+      console.warn('Firestore stats access error:', err.message);
     });
 
     const qApps = query(collection(db, 'applications'));
     const unsubscribeApps = onSnapshot(qApps, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as VolunteerApplication));
       data.sort((a, b) => (b.dateApplied || '').localeCompare(a.dateApplied || ''));
-      console.log('Firestore Applications loaded:', data.length);
       setApplications(data);
     }, (err) => {
-      if (!err.message.includes('quota')) {
-        handleFirestoreError(err, OperationType.LIST, 'applications');
-      }
+      console.warn('Firestore applications access error:', err.message);
     });
 
     const qAssets = query(collection(db, 'site_assets'));
     const unsubscribeAssets = onSnapshot(qAssets, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      console.log('Firestore Assets loaded:', data.length);
       setSiteAssets(data);
     }, (err) => {
-      if (!err.message.includes('quota')) {
-        handleFirestoreError(err, OperationType.LIST, 'site_assets');
-      }
+      console.warn('Firestore site_assets access error:', err.message);
     });
 
     const qContent = query(collection(db, 'site_content'));
     const unsubscribeContent = onSnapshot(qContent, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      console.log('Firestore Content loaded:', data.length);
       setSiteContent(data);
       setIsLoading(false);
     }, (err) => {
-      if (!err.message.includes('quota')) {
-        handleFirestoreError(err, OperationType.LIST, 'site_content');
-      }
+      console.warn('Firestore site_content access error:', err.message);
       setIsLoading(false);
     });
 

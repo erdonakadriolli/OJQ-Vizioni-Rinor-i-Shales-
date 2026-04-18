@@ -4,8 +4,7 @@ import { useParams } from 'react-router-dom';
 import { getDb } from '../services/mockDb';
 import { StaffMember, User } from '../types';
 import { useLanguage } from '../context/LanguageContext';
-import { db as firestore } from '../firebase';
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { useFirestore } from '../context/FirestoreContext';
 import Logo from '../components/Logo';
 import EditableText from '../components/EditableText';
 import { motion } from 'motion/react';
@@ -21,42 +20,24 @@ interface AboutProps {
 
 const About: React.FC<AboutProps> = ({ user }) => {
   const { section } = useParams<{ section: string }>();
-  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const { staff, siteAssets } = useFirestore();
   const [selectedMember, setSelectedMember] = useState<StaffMember | null>(null);
   const [missionImages, setMissionImages] = useState<string[]>([]);
   const [activeMissionIdx, setActiveMissionIdx] = useState(0);
   const { t } = useLanguage();
 
   useEffect(() => {
-    const q = query(collection(firestore, 'staff'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const staffData: StaffMember[] = [];
-      snapshot.forEach((doc) => {
-        staffData.push({ id: doc.id, ...doc.data() } as StaffMember);
-      });
-      setStaff(staffData);
-    });
+    const images = siteAssets
+      .filter(asset => asset.key === 'mission_images' && asset.type === 'image')
+      .map(asset => asset.url);
 
-    const assetsQuery = query(collection(firestore, 'site_assets'));
-    const unsubscribeAssets = onSnapshot(assetsQuery, (snapshot) => {
-      const images = snapshot.docs
-        .map(doc => doc.data())
-        .filter(asset => asset.key === 'mission_images' && asset.type === 'image')
-        .map(asset => asset.url);
-
-      if (images.length > 0) {
-        setMissionImages(images);
-      } else {
-        // Fallback to defaults if none in DB
-        setMissionImages(["/mission1.png", "/mission2.png", "/mission3.png"]);
-      }
-    });
-
-    return () => {
-      unsubscribe();
-      unsubscribeAssets();
-    };
-  }, []);
+    if (images.length > 0) {
+      setMissionImages(images);
+    } else {
+      // Fallback if none in DB
+      setMissionImages(["/mission1.png", "/mission2.png", "/mission3.png"]);
+    }
+  }, [siteAssets]);
 
   useEffect(() => {
     if (missionImages.length === 0) return;

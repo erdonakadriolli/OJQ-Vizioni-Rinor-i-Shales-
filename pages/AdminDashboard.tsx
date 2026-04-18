@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  LayoutDashboard, FolderKanban, Users, 
-  Plus, Edit2, Trash2, X, Newspaper, Briefcase, Camera, 
+import {
+  LayoutDashboard, FolderKanban, Users,
+  Plus, Edit2, Trash2, X, Newspaper, Briefcase, Camera,
   Facebook, Instagram, Linkedin, Calendar, Sparkles, Loader2,
   CheckCircle, XCircle, Eye, FileText, ExternalLink, Image as ImageIcon,
   Save, Globe, Search as SearchIcon, Filter, Upload, File,
@@ -12,20 +12,23 @@ import {
 import { Project, ApplicationStatus, ProjectStatus, NewsItem, StaffMember, VolunteerApplication, Partner } from '../types';
 import { GoogleGenAI } from "@google/genai";
 import { useLanguage, translations } from '../context/LanguageContext';
+import { useFirestore } from '../context/FirestoreContext';
 import { db as firestore, auth, handleFirestoreError, OperationType } from '../firebase';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, addDoc, where, getDocs } from 'firebase/firestore';
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'applications' | 'news' | 'staff' | 'home' | 'about' | 'mission' | 'partners' | 'stats' | 'assets'>('overview');
-  const [firestoreStaff, setFirestoreStaff] = useState<StaffMember[]>([]);
-  const [firestoreProjects, setFirestoreProjects] = useState<Project[]>([]);
-  const [firestoreNews, setFirestoreNews] = useState<NewsItem[]>([]);
-  const [firestorePartners, setFirestorePartners] = useState<Partner[]>([]);
-  const [firestoreStats, setFirestoreStats] = useState<any[]>([]);
-  const [firestoreApplications, setFirestoreApplications] = useState<VolunteerApplication[]>([]);
-  const [firestoreAssets, setFirestoreAssets] = useState<any[]>([]);
+  const { 
+    staff: firestoreStaff, 
+    projects: firestoreProjects, 
+    news: firestoreNews, 
+    partners: firestorePartners, 
+    stats: firestoreStats, 
+    applications: firestoreApplications, 
+    siteAssets: firestoreAssets 
+  } = useFirestore();
   const { t, language } = useLanguage();
-  
+
   const [showProjectModal, setShowProjectModal] = useState(false);
   const [showNewsModal, setShowNewsModal] = useState(false);
   const [showStaffModal, setShowStaffModal] = useState(false);
@@ -35,7 +38,7 @@ const AdminDashboard: React.FC = () => {
   const [showAppDetails, setShowAppDetails] = useState<VolunteerApplication | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  
+
   const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [newsSearch, setNewsSearch] = useState('');
   const [newsFilter, setNewsFilter] = useState('All');
@@ -47,7 +50,7 @@ const AdminDashboard: React.FC = () => {
   const [editingStat, setEditingStat] = useState<any>(null);
   const [editingAsset, setEditingAsset] = useState<any>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: string, id: string } | null>(null);
-  
+
   const staffImageRef = useRef<HTMLInputElement>(null);
   const projectImageRef = useRef<HTMLInputElement>(null);
   const projectGalleryRef = useRef<HTMLInputElement>(null);
@@ -60,7 +63,7 @@ const AdminDashboard: React.FC = () => {
   const missionContentRef = useRef<HTMLTextAreaElement>(null);
 
   const [staffForm, setStaffForm] = useState({
-    name: '', role: '', category: 'Current Staff', bio: '', image: '', 
+    name: '', role: '', category: 'Current Staff', bio: '', image: '',
     socials: { facebook: '', instagram: '', linkedin: '' }
   });
 
@@ -102,85 +105,7 @@ const AdminDashboard: React.FC = () => {
   });
 
   useEffect(() => {
-    // Listen to Firestore staff
-    const qStaff = query(collection(firestore, 'staff'));
-    const unsubscribeStaff = onSnapshot(qStaff, (snapshot) => {
-      const staffData: StaffMember[] = [];
-      snapshot.forEach((doc) => {
-        staffData.push({ id: doc.id, ...doc.data() } as StaffMember);
-      });
-      setFirestoreStaff(staffData);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'staff'));
-
-    // Listen to Firestore projects
-    const qProjects = query(collection(firestore, 'projects'), orderBy('startDate', 'desc'));
-    const unsubscribeProjects = onSnapshot(qProjects, (snapshot) => {
-      const projectsData: Project[] = [];
-      snapshot.forEach((doc) => {
-        projectsData.push({ id: doc.id, ...doc.data() } as Project);
-      });
-      setFirestoreProjects(projectsData);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'projects'));
-
-    // Listen to Firestore news
-    const qNews = query(collection(firestore, 'news'), orderBy('datePosted', 'desc'));
-    const unsubscribeNews = onSnapshot(qNews, (snapshot) => {
-      const newsData: NewsItem[] = [];
-      snapshot.forEach((doc) => {
-        newsData.push({ id: doc.id, ...doc.data() } as NewsItem);
-      });
-      setFirestoreNews(newsData);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'news'));
-
-    // Listen to Firestore partners
-    const qPartners = query(collection(firestore, 'partners'), orderBy('name'));
-    const unsubscribePartners = onSnapshot(qPartners, (snapshot) => {
-      const partnersData: Partner[] = [];
-      snapshot.forEach((doc) => {
-        partnersData.push({ id: doc.id, ...doc.data() } as Partner);
-      });
-      setFirestorePartners(partnersData);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'partners'));
-
-    // Listen to Firestore stats
-    const qStats = query(collection(firestore, 'stats'), orderBy('label'));
-    const unsubscribeStats = onSnapshot(qStats, (snapshot) => {
-      const statsData: any[] = [];
-      snapshot.forEach((doc) => {
-        statsData.push({ id: doc.id, ...doc.data() });
-      });
-      setFirestoreStats(statsData);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'stats'));
-
-    // Listen to Firestore applications
-    const qApps = query(collection(firestore, 'applications'), orderBy('dateApplied', 'desc'));
-    const unsubscribeApps = onSnapshot(qApps, (snapshot) => {
-      const appsData: VolunteerApplication[] = [];
-      snapshot.forEach((doc) => {
-        appsData.push({ id: doc.id, ...doc.data() } as VolunteerApplication);
-      });
-      setFirestoreApplications(appsData);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'applications'));
-
-    // Listen to Firestore assets
-    const qAssets = query(collection(firestore, 'site_assets'));
-    const unsubscribeAssets = onSnapshot(qAssets, (snapshot) => {
-      const assetsData: any[] = [];
-      snapshot.forEach((doc) => {
-        assetsData.push({ id: doc.id, ...doc.data() });
-      });
-      setFirestoreAssets(assetsData);
-    }, (err) => handleFirestoreError(err, OperationType.LIST, 'site_assets'));
-    
-    return () => {
-      unsubscribeStaff();
-      unsubscribeProjects();
-      unsubscribeNews();
-      unsubscribePartners();
-      unsubscribeStats();
-      unsubscribeApps();
-      unsubscribeAssets();
-    };
+    // Shared listeners are now managed by FirestoreContext
   }, []);
 
   const showError = (msg: string) => {
@@ -252,7 +177,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleSavePartner = async () => {
     if (!partnerForm.name) return;
-    
+
     const partnerData = {
       name: partnerForm.name,
       logo: partnerForm.logo || 'https://via.placeholder.com/150',
@@ -285,7 +210,7 @@ const AdminDashboard: React.FC = () => {
     try {
       const q = query(collection(firestore, 'site_content'), where('key', '==', key));
       const snapshot = await getDocs(q);
-      
+
       if (snapshot.empty) {
         await addDoc(collection(firestore, 'site_content'), {
           key,
@@ -448,7 +373,7 @@ const AdminDashboard: React.FC = () => {
   const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
-    
+
     // Limit total gallery images to 8
     if (projectForm.gallery.length + files.length > 8) {
       showError(language === 'AL' ? "Maksimumi 8 foto në galeri." : "Maximum 8 photos in gallery.");
@@ -467,11 +392,11 @@ const AdminDashboard: React.FC = () => {
   const generateWithAi = async (promptType: 'project' | 'news') => {
     const title = promptType === 'project' ? projectForm.title : newsForm.title;
     if (!title) return showError(t('admin.title') + " required!");
-    
+
     setIsAiGenerating(true);
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const prompt = promptType === 'project' 
+      const prompt = promptType === 'project'
         ? `Write an inspiring and detailed description for a project titled "${title}" for the NGO "Vizioni Rinor i Shalës" (VRSH) in the village of Shale, Lipjan. Focus on youth empowerment and community impact. Do not use "**" for bolding; use clear structure instead. Language: ${language === 'AL' ? 'Albanian' : 'English'}.`
         : `Write a professional and engaging news article/summary for "${title}" for the NGO "Vizioni Rinor i Shalës" (VRSH). The tone should be positive and community-focused. Do not use "**" for bolding; use clear structure instead. Language: ${language === 'AL' ? 'Albanian' : 'English'}.`;
 
@@ -480,7 +405,7 @@ const AdminDashboard: React.FC = () => {
         model: 'gemini-3-flash-preview',
         contents: prompt,
       });
-      
+
       const result = response.text || "";
       if (promptType === 'project') setProjectForm(prev => ({ ...prev, description: result }));
       else setNewsForm(prev => ({ ...prev, content: result }));
@@ -514,7 +439,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleSaveNews = async () => {
     if (!newsForm.title) return;
-    
+
     const newsData = {
       title: newsForm.title,
       content: newsForm.content,
@@ -564,12 +489,12 @@ const AdminDashboard: React.FC = () => {
 
   const handleSaveProject = async () => {
     if (!projectForm.title) return;
-    
+
     if (!auth.currentUser) {
       showError('Duhet të jeni të kyçur me Google për të ruajtur në DB');
       return;
     }
-    
+
     const projectData = {
       title: projectForm.title,
       description: projectForm.description,
@@ -618,7 +543,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleSaveStaff = async () => {
     if (!staffForm.name) return;
-    
+
     if (!auth.currentUser) {
       showError('Duhet të jeni të kyçur me Google për të ruajtur në DB');
       return;
@@ -676,7 +601,7 @@ const AdminDashboard: React.FC = () => {
   const confirmDelete = async () => {
     if (!deleteConfirm) return;
     const { type, id } = deleteConfirm;
-    
+
     try {
       await deleteDoc(doc(firestore, type, id));
       setSuccessMessage('Elementi u fshi me sukses!');
@@ -689,7 +614,7 @@ const AdminDashboard: React.FC = () => {
         showError(`Gabim: ${errData.error}`);
       }
     }
-    
+
     setDeleteConfirm(null);
   };
 
@@ -721,7 +646,7 @@ const AdminDashboard: React.FC = () => {
               { id: 'stats', icon: Star, label: 'Statistikat', color: 'text-brand-pink', bg: 'hover:bg-brand-pink/10' },
               { id: 'applications', icon: Users, label: t('admin.applications'), color: 'text-brand-orange', bg: 'hover:bg-brand-orange/10' },
             ].map(item => (
-              <button 
+              <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id as any)}
                 className={`w-full flex items-center space-x-4 px-6 py-4 rounded-2xl transition-all font-black uppercase text-[10px] tracking-[0.15em] relative group ${activeTab === item.id ? 'bg-white/10 text-white shadow-xl' : `text-white/40 ${item.bg} hover:text-white`}`}
@@ -734,7 +659,7 @@ const AdminDashboard: React.FC = () => {
               </button>
             ))}
           </nav>
-          
+
           <div className="mt-auto pt-8 border-t border-white/5">
             <div className="bg-white/5 rounded-2xl p-4 flex items-center space-x-3">
               <div className="w-8 h-8 rounded-xl bg-brand-pink/20 flex items-center justify-center text-brand-pink font-black text-xs">A</div>
@@ -802,27 +727,27 @@ const AdminDashboard: React.FC = () => {
                 <div className="space-y-6">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Hero Title</label>
-                    <input 
+                    <input
                       ref={heroTitleRef}
-                      type="text" 
-                      className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-brand-blue/10 transition-all" 
-                      defaultValue={t('hero.title1')} 
+                      type="text"
+                      className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-brand-blue/10 transition-all"
+                      defaultValue={t('hero.title1')}
                     />
                   </div>
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Hero Subtitle</label>
-                    <textarea 
+                    <textarea
                       ref={heroDescRef}
-                      rows={4} 
-                      className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-brand-blue/10 transition-all resize-none" 
-                      defaultValue={t('hero.desc')} 
+                      rows={4}
+                      className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-brand-blue/10 transition-all resize-none"
+                      defaultValue={t('hero.desc')}
                     />
                   </div>
-                  <button 
+                  <button
                     onClick={() => {
                       handleSaveSiteContent('hero.title1', heroTitleRef.current?.value || '');
                       handleSaveSiteContent('hero.desc', heroDescRef.current?.value || '');
-                    }} 
+                    }}
                     className="px-8 py-4 bg-brand-blue text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-brand-blue/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
                     {t('admin.save')}
@@ -842,15 +767,15 @@ const AdminDashboard: React.FC = () => {
                 <div className="space-y-6">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">About Description</label>
-                    <textarea 
+                    <textarea
                       ref={aboutDescRef}
-                      rows={6} 
-                      className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-brand-cyan/10 transition-all resize-none" 
-                      defaultValue={t('about.main.desc')} 
+                      rows={6}
+                      className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-brand-cyan/10 transition-all resize-none"
+                      defaultValue={t('about.main.desc')}
                     />
                   </div>
-                  <button 
-                    onClick={() => handleSaveSiteContent('about.main.desc', aboutDescRef.current?.value || '')} 
+                  <button
+                    onClick={() => handleSaveSiteContent('about.main.desc', aboutDescRef.current?.value || '')}
                     className="px-8 py-4 bg-brand-cyan text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-brand-cyan/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
                     {t('admin.save')}
@@ -870,15 +795,15 @@ const AdminDashboard: React.FC = () => {
                 <div className="space-y-6">
                   <div>
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Mission Content</label>
-                    <textarea 
+                    <textarea
                       ref={missionContentRef}
-                      rows={8} 
-                      className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-brand-lime/10 transition-all resize-none" 
-                      defaultValue={t('about.main.goal')} 
+                      rows={8}
+                      className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-brand-lime/10 transition-all resize-none"
+                      defaultValue={t('about.main.goal')}
                     />
                   </div>
-                  <button 
-                    onClick={() => handleSaveSiteContent('about.main.goal', missionContentRef.current?.value || '')} 
+                  <button
+                    onClick={() => handleSaveSiteContent('about.main.goal', missionContentRef.current?.value || '')}
                     className="px-8 py-4 bg-brand-lime text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-brand-lime/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
                   >
                     {t('admin.save')}
@@ -910,11 +835,11 @@ const AdminDashboard: React.FC = () => {
                     {firestoreProjects.map(p => (
                       <tr key={p.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-6 py-4 flex items-center space-x-3">
-                           <img src={p.image} className="w-10 h-10 rounded-xl object-cover" />
-                           <span className="font-bold text-xs text-brand-dark">{p.title}</span>
+                          <img src={p.image} className="w-10 h-10 rounded-xl object-cover" />
+                          <span className="font-bold text-xs text-brand-dark">{p.title}</span>
                         </td>
                         <td className="px-6 py-4">
-                           <span className="px-2.5 py-1 bg-slate-100 rounded-full text-[7px] font-black uppercase tracking-widest text-slate-500">{p.status}</span>
+                          <span className="px-2.5 py-1 bg-slate-100 rounded-full text-[7px] font-black uppercase tracking-widest text-slate-500">{p.status}</span>
                         </td>
                         <td className="px-6 py-4 text-right space-x-1">
                           <button onClick={() => handleOpenProjectModal(p)} className="p-2 text-slate-400 hover:text-brand-pink rounded-lg"><Edit2 className="h-3.5 w-3.5" /></button>
@@ -936,8 +861,8 @@ const AdminDashboard: React.FC = () => {
                 <div className="flex flex-wrap items-center gap-4">
                   <div className="relative">
                     <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder={t('projects.search')}
                       className="pl-12 pr-6 py-3 bg-white border border-slate-200 rounded-full text-xs font-bold outline-none focus:ring-2 focus:ring-brand-pink shadow-sm w-48 sm:w-64"
                       value={newsSearch}
@@ -952,13 +877,13 @@ const AdminDashboard: React.FC = () => {
 
               <div className="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-sm">
                 <table className="w-full text-left">
-                    <thead className="bg-slate-50 border-b border-slate-100">
-                      <tr>
-                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('admin.title')}</th>
-                        <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('admin.category')}</th>
-                        <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('admin.actions')}</th>
-                      </tr>
-                    </thead>
+                  <thead className="bg-slate-50 border-b border-slate-100">
+                    <tr>
+                      <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('admin.title')}</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('admin.category')}</th>
+                      <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('admin.actions')}</th>
+                    </tr>
+                  </thead>
                   <tbody className="divide-y divide-slate-50">
                     {firestoreNews.filter(n => {
                       const matchesSearch = n.title.toLowerCase().includes(newsSearch.toLowerCase());
@@ -968,11 +893,10 @@ const AdminDashboard: React.FC = () => {
                       <tr key={n.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-8 py-6 font-bold text-sm text-brand-dark line-clamp-1">{n.title}</td>
                         <td className="px-8 py-6">
-                           <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
-                             n.category === 'Reports' ? 'bg-brand-cyan/10 text-brand-cyan' : 'bg-slate-100 text-slate-500'
-                           }`}>
-                             {n.category === 'Reports' ? t('news.title.reports') : n.category}
-                           </span>
+                          <span className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${n.category === 'Reports' ? 'bg-brand-cyan/10 text-brand-cyan' : 'bg-slate-100 text-slate-500'
+                            }`}>
+                            {n.category === 'Reports' ? t('news.title.reports') : n.category}
+                          </span>
                         </td>
                         <td className="px-8 py-6 text-right space-x-1">
                           <button onClick={() => handleOpenNewsModal(n)} className="p-2.5 text-slate-400 hover:text-brand-pink rounded-xl"><Edit2 className="h-4 w-4" /></button>
@@ -1005,7 +929,7 @@ const AdminDashboard: React.FC = () => {
                       <button onClick={() => handleOpenStaffModal(s)} className="p-2.5 bg-white shadow-lg rounded-xl text-slate-400 hover:text-brand-cyan transition-colors"><Edit2 className="h-4 w-4" /></button>
                       <button onClick={() => deleteItem('staff', s.id)} className="p-2.5 bg-white shadow-lg rounded-xl text-slate-400 hover:text-red-500 transition-colors"><Trash2 className="h-4 w-4" /></button>
                     </div>
-                    
+
                     <div className="flex items-start space-x-5 mb-6">
                       <div className="relative flex-shrink-0">
                         <img src={s.image} className="w-20 h-20 rounded-[2rem] object-cover border-4 border-slate-50 shadow-inner" />
@@ -1096,7 +1020,7 @@ const AdminDashboard: React.FC = () => {
                   <h1 className="text-3xl font-black text-brand-dark uppercase tracking-tight">Assetet e Faqes</h1>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Menaxhoni imazhet globale të faqes (Hero, Mission, etj.)</p>
                 </div>
-                <button 
+                <button
                   onClick={() => handleOpenAssetModal()}
                   className="flex items-center space-x-3 bg-brand-cyan text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-brand-cyan/20 hover:scale-105 transition-all"
                 >
@@ -1123,13 +1047,13 @@ const AdminDashboard: React.FC = () => {
                           <div className="flex items-center justify-between px-2">
                             <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">{asset.type}</span>
                             <div className="flex space-x-1">
-                              <button 
+                              <button
                                 onClick={() => handleOpenAssetModal(asset)}
                                 className="p-2 text-slate-300 hover:text-brand-cyan transition-colors"
                               >
                                 <Edit2 className="h-4 w-4" />
                               </button>
-                              <button 
+                              <button
                                 onClick={() => deleteItem('site_assets', asset.id)}
                                 className="p-2 text-slate-300 hover:text-red-500 transition-colors"
                               >
@@ -1162,7 +1086,7 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="flex space-x-4">
                   {firestoreStats.length === 0 && (
-                    <button 
+                    <button
                       onClick={seedInitialStats}
                       className="flex items-center space-x-3 bg-brand-dark text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-brand-dark/20 hover:scale-105 transition-all"
                     >
@@ -1170,7 +1094,7 @@ const AdminDashboard: React.FC = () => {
                       <span>Shto Statistika Fillestare</span>
                     </button>
                   )}
-                  <button 
+                  <button
                     onClick={() => handleOpenStatsModal()}
                     className="flex items-center space-x-3 bg-brand-pink text-white px-8 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-brand-pink/20 hover:scale-105 transition-all"
                   >
@@ -1197,13 +1121,13 @@ const AdminDashboard: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex space-x-2">
-                        <button 
+                        <button
                           onClick={() => handleOpenStatsModal(stat)}
                           className="p-3 bg-slate-50 text-slate-400 hover:bg-brand-pink hover:text-white rounded-2xl transition-all shadow-sm"
                         >
                           <Edit2 className="h-5 w-5" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => deleteItem('stats', stat.id)}
                           className="p-3 bg-slate-50 text-slate-400 hover:bg-red-500 hover:text-white rounded-2xl transition-all shadow-sm"
                         >
@@ -1246,7 +1170,7 @@ const AdminDashboard: React.FC = () => {
                       <tr key={app.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-8 py-6 font-bold text-sm text-brand-dark">{app.userName}</td>
                         <td className="px-8 py-6">
-                           <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${app.status === ApplicationStatus.APPROVED ? 'bg-brand-lime/10 text-brand-lime' : 'bg-slate-100 text-slate-500'}`}>{app.status}</span>
+                          <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${app.status === ApplicationStatus.APPROVED ? 'bg-brand-lime/10 text-brand-lime' : 'bg-slate-100 text-slate-500'}`}>{app.status}</span>
                         </td>
                         <td className="px-8 py-6 text-right space-x-2">
                           <button onClick={() => setShowAppDetails(app)} className="p-2.5 text-slate-400 hover:text-brand-cyan rounded-xl"><Eye className="h-4 w-4" /></button>
@@ -1266,82 +1190,82 @@ const AdminDashboard: React.FC = () => {
       {showNewsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark/80 backdrop-blur-md">
           <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
-             <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-               <div>
-                 <h2 className="text-xl font-black text-brand-dark uppercase tracking-tight">
-                   {editingNews ? t('admin.editNews') : t('admin.addNews')}
-                 </h2>
-                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Menaxhoni lajmet dhe raportet</p>
-               </div>
-               <button onClick={() => setShowNewsModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition-all group">
-                 <X className="h-6 w-6 text-slate-400 group-hover:text-brand-dark transition-colors" />
-               </button>
-             </div>
-             <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div>
+                <h2 className="text-xl font-black text-brand-dark uppercase tracking-tight">
+                  {editingNews ? t('admin.editNews') : t('admin.addNews')}
+                </h2>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Menaxhoni lajmet dhe raportet</p>
+              </div>
+              <button onClick={() => setShowNewsModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition-all group">
+                <X className="h-6 w-6 text-slate-400 group-hover:text-brand-dark transition-colors" />
+              </button>
+            </div>
+            <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.title')}</label>
+                <input type="text" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-lime/20 focus:border-brand-lime transition-all" value={newsForm.title} onChange={e => setNewsForm(prev => ({ ...prev, title: e.target.value }))} />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.title')}</label>
-                  <input type="text" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-lime/20 focus:border-brand-lime transition-all" value={newsForm.title} onChange={e => setNewsForm(prev => ({...prev, title: e.target.value}))} />
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.category')}</label>
+                  <select className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-lime/20 focus:border-brand-lime transition-all appearance-none" value={newsForm.category} onChange={e => setNewsForm(prev => ({ ...prev, category: e.target.value }))}>
+                    <option value="Latest News">{t('news.title.latest')}</option>
+                    <option value="Media">{t('news.title.media')}</option>
+                    <option value="Reports">{t('news.title.reports')}</option>
+                  </select>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.category')}</label>
-                    <select className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-lime/20 focus:border-brand-lime transition-all appearance-none" value={newsForm.category} onChange={e => setNewsForm(prev => ({...prev, category: e.target.value}))}>
-                      <option value="Latest News">{t('news.title.latest')}</option>
-                      <option value="Media">{t('news.title.media')}</option>
-                      <option value="Reports">{t('news.title.reports')}</option>
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.date')}</label>
-                    <input type="date" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-lime/20 focus:border-brand-lime transition-all" value={newsForm.datePosted} onChange={e => setNewsForm(prev => ({...prev, datePosted: e.target.value}))} />
-                  </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.date')}</label>
+                  <input type="date" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-lime/20 focus:border-brand-lime transition-all" value={newsForm.datePosted} onChange={e => setNewsForm(prev => ({ ...prev, datePosted: e.target.value }))} />
                 </div>
-                <div className="space-y-3">
-                   <div className="flex justify-between items-center px-1">
-                     <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Përmbajtja</label>
-                     <button onClick={() => generateWithAi('news')} disabled={isAiGenerating} className="text-[9px] font-black text-brand-orange uppercase flex items-center hover:scale-105 transition-transform">
-                       {isAiGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5" />}
-                       {t('admin.generateAi')}
-                     </button>
-                   </div>
-                   <textarea rows={4} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-sm outline-none resize-none focus:ring-2 focus:ring-brand-lime/20 focus:border-brand-lime transition-all" value={newsForm.content} onChange={e => setNewsForm(prev => ({...prev, content: e.target.value}))} />
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center px-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Përmbajtja</label>
+                  <button onClick={() => generateWithAi('news')} disabled={isAiGenerating} className="text-[9px] font-black text-brand-orange uppercase flex items-center hover:scale-105 transition-transform">
+                    {isAiGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5" />}
+                    {t('admin.generateAi')}
+                  </button>
                 </div>
-                <div className="space-y-4 p-6 bg-slate-50/50 rounded-3xl border border-slate-100 shadow-inner">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
-                    {newsForm.category === 'Reports' ? 'Ngarko Dokument (PDF/DOC)' : 'Linku i Burimit / URL'}
-                  </label>
-                  {newsForm.category === 'Reports' ? (
-                    <div className="space-y-3">
-                      <div onClick={() => reportFileRef.current?.click()} className="cursor-pointer py-8 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center bg-white hover:bg-slate-100 transition-all relative group shadow-sm">
-                        {newsForm.fileName ? (
-                          <div className="flex items-center text-brand-cyan">
-                            <File className="h-6 w-6 mr-3" />
-                            <span className="text-sm font-bold">{newsForm.fileName}</span>
-                            <button onClick={(e) => { e.stopPropagation(); setNewsForm(prev => ({...prev, fileName: '', fileUrl: ''})); }} className="ml-3 p-1.5 bg-red-500 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all"><X className="h-4 w-4" /></button>
-                          </div>
-                        ) : (
-                          <>
-                            <Upload className="h-6 w-6 text-slate-300 mb-2 group-hover:scale-110 transition-transform" />
-                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{t('ui.upload')}</span>
-                          </>
-                        )}
-                      </div>
-                      <input type="file" hidden ref={reportFileRef} accept=".pdf,.doc,.docx" onChange={handleDocUpload} />
+                <textarea rows={4} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-sm outline-none resize-none focus:ring-2 focus:ring-brand-lime/20 focus:border-brand-lime transition-all" value={newsForm.content} onChange={e => setNewsForm(prev => ({ ...prev, content: e.target.value }))} />
+              </div>
+              <div className="space-y-4 p-6 bg-slate-50/50 rounded-3xl border border-slate-100 shadow-inner">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">
+                  {newsForm.category === 'Reports' ? 'Ngarko Dokument (PDF/DOC)' : 'Linku i Burimit / URL'}
+                </label>
+                {newsForm.category === 'Reports' ? (
+                  <div className="space-y-3">
+                    <div onClick={() => reportFileRef.current?.click()} className="cursor-pointer py-8 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center bg-white hover:bg-slate-100 transition-all relative group shadow-sm">
+                      {newsForm.fileName ? (
+                        <div className="flex items-center text-brand-cyan">
+                          <File className="h-6 w-6 mr-3" />
+                          <span className="text-sm font-bold">{newsForm.fileName}</span>
+                          <button onClick={(e) => { e.stopPropagation(); setNewsForm(prev => ({ ...prev, fileName: '', fileUrl: '' })); }} className="ml-3 p-1.5 bg-red-500 text-white rounded-xl opacity-0 group-hover:opacity-100 transition-all"><X className="h-4 w-4" /></button>
+                        </div>
+                      ) : (
+                        <>
+                          <Upload className="h-6 w-6 text-slate-300 mb-2 group-hover:scale-110 transition-transform" />
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{t('ui.upload')}</span>
+                        </>
+                      )}
                     </div>
-                  ) : (
-                    <div className="relative group">
-                      <Globe className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-brand-lime transition-colors" />
-                      <input type="text" placeholder="https://..." className="w-full pl-12 pr-6 py-3.5 bg-white border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-lime/20 focus:border-brand-lime transition-all" value={newsForm.fileUrl} onChange={e => setNewsForm(prev => ({...prev, fileUrl: e.target.value}))} />
-                    </div>
-                  )}
-                </div>
-                <div className="flex gap-4 pt-4">
-                   <button onClick={() => setShowNewsModal(false)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-slate-200 transition-all">{t('admin.cancel')}</button>
-                   <button onClick={handleSaveNews} className="flex-[2] py-4 bg-brand-lime text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-brand-lime/20 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] transition-all">
-                     <Save className="h-4 w-4 mr-2" /> {t('admin.save')}
-                   </button>
-                </div>
-             </div>
+                    <input type="file" hidden ref={reportFileRef} accept=".pdf,.doc,.docx" onChange={handleDocUpload} />
+                  </div>
+                ) : (
+                  <div className="relative group">
+                    <Globe className="absolute left-5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 group-focus-within:text-brand-lime transition-colors" />
+                    <input type="text" placeholder="https://..." className="w-full pl-12 pr-6 py-3.5 bg-white border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-lime/20 focus:border-brand-lime transition-all" value={newsForm.fileUrl} onChange={e => setNewsForm(prev => ({ ...prev, fileUrl: e.target.value }))} />
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-4 pt-4">
+                <button onClick={() => setShowNewsModal(false)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-[11px] tracking-widest hover:bg-slate-200 transition-all">{t('admin.cancel')}</button>
+                <button onClick={handleSaveNews} className="flex-[2] py-4 bg-brand-lime text-white rounded-2xl font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-brand-lime/20 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] transition-all">
+                  <Save className="h-4 w-4 mr-2" /> {t('admin.save')}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1350,106 +1274,106 @@ const AdminDashboard: React.FC = () => {
       {showProjectModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark/80 backdrop-blur-md">
           <div className="bg-white w-full max-w-3xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
-             <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-               <div>
-                 <h2 className="text-xl font-black text-brand-dark uppercase tracking-tight">{editingProject ? t('admin.editProject') : t('admin.addProject')}</h2>
-                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Menaxhoni projektet e organizatës</p>
-               </div>
-               <button onClick={() => setShowProjectModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition-all group">
-                 <X className="h-6 w-6 text-slate-400 group-hover:text-brand-dark transition-colors" />
-               </button>
-             </div>
-             <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.title')}</label>
-                    <input type="text" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all" value={projectForm.title} onChange={e => setProjectForm(prev => ({...prev, title: e.target.value}))} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.status')}</label>
-                    <select className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all appearance-none" value={projectForm.status} onChange={e => setProjectForm(prev => ({...prev, status: e.target.value as ProjectStatus}))}>
-                      <option value={ProjectStatus.Active}>{t('projects.filter.active')}</option>
-                      <option value={ProjectStatus.Completed}>{t('projects.filter.completed')}</option>
-                      <option value={ProjectStatus.Upcoming}>Upcoming</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.startDate') || 'Data e Fillimit'}</label>
-                    <input type="date" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all" value={projectForm.startDate} onChange={e => setProjectForm(prev => ({...prev, startDate: e.target.value}))} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.endDate') || 'Data e Përfundimit'}</label>
-                    <input type="date" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all" value={projectForm.endDate} onChange={e => setProjectForm(prev => ({...prev, endDate: e.target.value}))} />
-                  </div>
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div>
+                <h2 className="text-xl font-black text-brand-dark uppercase tracking-tight">{editingProject ? t('admin.editProject') : t('admin.addProject')}</h2>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Menaxhoni projektet e organizatës</p>
+              </div>
+              <button onClick={() => setShowProjectModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition-all group">
+                <X className="h-6 w-6 text-slate-400 group-hover:text-brand-dark transition-colors" />
+              </button>
+            </div>
+            <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.title')}</label>
+                  <input type="text" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all" value={projectForm.title} onChange={e => setProjectForm(prev => ({ ...prev, title: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Numri i Pjesëmarrësve / Vullnetarëve</label>
-                  <input type="number" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all" value={projectForm.volunteerCount} onChange={e => setProjectForm(prev => ({...prev, volunteerCount: parseInt(e.target.value) || 0}))} />
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.status')}</label>
+                  <select className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all appearance-none" value={projectForm.status} onChange={e => setProjectForm(prev => ({ ...prev, status: e.target.value as ProjectStatus }))}>
+                    <option value={ProjectStatus.Active}>{t('projects.filter.active')}</option>
+                    <option value={ProjectStatus.Completed}>{t('projects.filter.completed')}</option>
+                    <option value={ProjectStatus.Upcoming}>Upcoming</option>
+                  </select>
                 </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center px-1">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Përmbledhja (AI)</label>
-                    <button onClick={() => generateWithAi('project')} disabled={isAiGenerating} className="text-[9px] font-black text-brand-orange uppercase flex items-center hover:scale-105 transition-transform">
-                       {isAiGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5" />} Gjenero me AI
-                    </button>
-                  </div>
-                  <textarea rows={2} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-sm outline-none resize-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all" value={projectForm.description} onChange={e => setProjectForm(prev => ({...prev, description: e.target.value}))} />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.startDate') || 'Data e Fillimit'}</label>
+                  <input type="date" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all" value={projectForm.startDate} onChange={e => setProjectForm(prev => ({ ...prev, startDate: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('projects.impl')}</label>
-                  <textarea rows={4} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-sm outline-none resize-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all" value={projectForm.longDescription} onChange={e => setProjectForm(prev => ({...prev, longDescription: e.target.value}))} />
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.endDate') || 'Data e Përfundimit'}</label>
+                  <input type="date" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all" value={projectForm.endDate} onChange={e => setProjectForm(prev => ({ ...prev, endDate: e.target.value }))} />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.mainImage')}</label>
-                    <div onClick={() => projectImageRef.current?.click()} className="cursor-pointer aspect-video border-2 border-dashed border-slate-200 rounded-[2.5rem] flex flex-col items-center justify-center overflow-hidden bg-slate-50 hover:bg-slate-100 transition-all relative group shadow-inner">
-                      {projectForm.image ? (
-                        <>
-                          <img src={projectForm.image} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-brand-dark/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button onClick={(e) => { e.stopPropagation(); setProjectForm(prev => ({...prev, image: ''})); }} className="p-3 bg-red-500 text-white rounded-2xl transform scale-90 group-hover:scale-100 transition-all"><Trash2 className="h-5 w-5" /></button>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="text-center">
-                          <Camera className="text-slate-300 h-10 w-10 mx-auto mb-2" />
-                          <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Foto Kryesore</span>
-                        </div>
-                      )}
-                    </div>
-                    <input type="file" hidden ref={projectImageRef} accept="image/*" onChange={async e => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const base64 = await handleFileRead(file);
-                        const compressed = await compressImage(base64, 1000, 800, 0.7);
-                        setProjectForm(prev => ({...prev, image: compressed}));
-                      }
-                    }} />
-                  </div>
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.gallery')}</label>
-                    <div className="flex flex-col space-y-4">
-                      <button onClick={() => projectGalleryRef.current?.click()} className="py-4 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center bg-slate-50 text-[10px] font-black uppercase text-slate-400 hover:bg-slate-100 transition-all shadow-inner"><Plus className="h-4 w-4 mr-2" /> Shto Foto në Galeri</button>
-                      <input type="file" hidden ref={projectGalleryRef} multiple accept="image/*" onChange={handleGalleryUpload} />
-                      <div className="grid grid-cols-4 gap-3">
-                        {projectForm.gallery.map((img, idx) => (
-                          <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-slate-100 group shadow-sm">
-                            <img src={img} className="w-full h-full object-cover" />
-                            <button onClick={() => setProjectForm(prev => ({...prev, gallery: prev.gallery.filter((_, i) => i !== idx)}))} className="absolute inset-0 bg-red-500/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"><X className="h-5 w-5" /></button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="pt-4">
-                  <button onClick={handleSaveProject} className="w-full py-4.5 bg-brand-pink text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-brand-pink/20 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] transition-all">
-                    <Save className="h-4 w-4 mr-2" /> {t('admin.save')}
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Numri i Pjesëmarrësve / Vullnetarëve</label>
+                <input type="number" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all" value={projectForm.volunteerCount} onChange={e => setProjectForm(prev => ({ ...prev, volunteerCount: parseInt(e.target.value) || 0 }))} />
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center px-1">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Përmbledhja (AI)</label>
+                  <button onClick={() => generateWithAi('project')} disabled={isAiGenerating} className="text-[9px] font-black text-brand-orange uppercase flex items-center hover:scale-105 transition-transform">
+                    {isAiGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5" />} Gjenero me AI
                   </button>
                 </div>
-             </div>
+                <textarea rows={2} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-sm outline-none resize-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all" value={projectForm.description} onChange={e => setProjectForm(prev => ({ ...prev, description: e.target.value }))} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('projects.impl')}</label>
+                <textarea rows={4} className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-sm outline-none resize-none focus:ring-2 focus:ring-brand-pink/20 focus:border-brand-pink transition-all" value={projectForm.longDescription} onChange={e => setProjectForm(prev => ({ ...prev, longDescription: e.target.value }))} />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.mainImage')}</label>
+                  <div onClick={() => projectImageRef.current?.click()} className="cursor-pointer aspect-video border-2 border-dashed border-slate-200 rounded-[2.5rem] flex flex-col items-center justify-center overflow-hidden bg-slate-50 hover:bg-slate-100 transition-all relative group shadow-inner">
+                    {projectForm.image ? (
+                      <>
+                        <img src={projectForm.image} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-brand-dark/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button onClick={(e) => { e.stopPropagation(); setProjectForm(prev => ({ ...prev, image: '' })); }} className="p-3 bg-red-500 text-white rounded-2xl transform scale-90 group-hover:scale-100 transition-all"><Trash2 className="h-5 w-5" /></button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center">
+                        <Camera className="text-slate-300 h-10 w-10 mx-auto mb-2" />
+                        <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Foto Kryesore</span>
+                      </div>
+                    )}
+                  </div>
+                  <input type="file" hidden ref={projectImageRef} accept="image/*" onChange={async e => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const base64 = await handleFileRead(file);
+                      const compressed = await compressImage(base64, 1000, 800, 0.7);
+                      setProjectForm(prev => ({ ...prev, image: compressed }));
+                    }
+                  }} />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">{t('admin.gallery')}</label>
+                  <div className="flex flex-col space-y-4">
+                    <button onClick={() => projectGalleryRef.current?.click()} className="py-4 border-2 border-dashed border-slate-200 rounded-2xl flex items-center justify-center bg-slate-50 text-[10px] font-black uppercase text-slate-400 hover:bg-slate-100 transition-all shadow-inner"><Plus className="h-4 w-4 mr-2" /> Shto Foto në Galeri</button>
+                    <input type="file" hidden ref={projectGalleryRef} multiple accept="image/*" onChange={handleGalleryUpload} />
+                    <div className="grid grid-cols-4 gap-3">
+                      {projectForm.gallery.map((img, idx) => (
+                        <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-slate-100 group shadow-sm">
+                          <img src={img} className="w-full h-full object-cover" />
+                          <button onClick={() => setProjectForm(prev => ({ ...prev, gallery: prev.gallery.filter((_, i) => i !== idx) }))} className="absolute inset-0 bg-red-500/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"><X className="h-5 w-5" /></button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="pt-4">
+                <button onClick={handleSaveProject} className="w-full py-4.5 bg-brand-pink text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-brand-pink/20 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] transition-all">
+                  <Save className="h-4 w-4 mr-2" /> {t('admin.save')}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1458,97 +1382,97 @@ const AdminDashboard: React.FC = () => {
       {showStaffModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-brand-dark/80 backdrop-blur-md">
           <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
-             <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-               <div>
-                 <h2 className="text-xl font-black text-brand-dark uppercase tracking-tight">{editingStaff ? t('admin.editStaff') : t('admin.addStaff')}</h2>
-                 <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Plotësoni të dhënat e anëtarit</p>
-               </div>
-               <button onClick={() => setShowStaffModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition-all group">
-                 <X className="h-6 w-6 text-slate-400 group-hover:text-brand-dark transition-colors" />
-               </button>
-             </div>
-             <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Emri i Plotë</label>
-                    <input type="text" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan transition-all" value={staffForm.name} onChange={e => setStaffForm(prev => ({...prev, name: e.target.value}))} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Roli / Pozita</label>
-                    <input type="text" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan transition-all" value={staffForm.role} onChange={e => setStaffForm(prev => ({...prev, role: e.target.value}))} />
-                  </div>
+            <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div>
+                <h2 className="text-xl font-black text-brand-dark uppercase tracking-tight">{editingStaff ? t('admin.editStaff') : t('admin.addStaff')}</h2>
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Plotësoni të dhënat e anëtarit</p>
+              </div>
+              <button onClick={() => setShowStaffModal(false)} className="p-2 hover:bg-slate-200 rounded-full transition-all group">
+                <X className="h-6 w-6 text-slate-400 group-hover:text-brand-dark transition-colors" />
+              </button>
+            </div>
+            <div className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Emri i Plotë</label>
+                  <input type="text" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan transition-all" value={staffForm.name} onChange={e => setStaffForm(prev => ({ ...prev, name: e.target.value }))} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Kategoria</label>
-                  <select className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan transition-all appearance-none" value={staffForm.category} onChange={e => setStaffForm(prev => ({...prev, category: e.target.value}))}>
-                    <option value="Executive Director">Executive Director</option>
-                    <option value="Current Staff">Current Staff</option>
-                    <option value="Members Assembly">Members Assembly</option>
-                    <option value="Board of Directors">Board of Directors</option>
-                    <option value="Volunteers">Volunteers</option>
-                  </select>
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Roli / Pozita</label>
+                  <input type="text" className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan transition-all" value={staffForm.role} onChange={e => setStaffForm(prev => ({ ...prev, role: e.target.value }))} />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Bio / Përshkrimi</label>
-                  <textarea rows={3} className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-sm outline-none resize-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan transition-all" value={staffForm.bio} onChange={e => setStaffForm(prev => ({...prev, bio: e.target.value}))} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Kategoria</label>
+                <select className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan transition-all appearance-none" value={staffForm.category} onChange={e => setStaffForm(prev => ({ ...prev, category: e.target.value }))}>
+                  <option value="Executive Director">Executive Director</option>
+                  <option value="Current Staff">Current Staff</option>
+                  <option value="Members Assembly">Members Assembly</option>
+                  <option value="Board of Directors">Board of Directors</option>
+                  <option value="Volunteers">Volunteers</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Bio / Përshkrimi</label>
+                <textarea rows={3} className="w-full px-6 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-medium text-sm outline-none resize-none focus:ring-2 focus:ring-brand-cyan/20 focus:border-brand-cyan transition-all" value={staffForm.bio} onChange={e => setStaffForm(prev => ({ ...prev, bio: e.target.value }))} />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Foto e Profilat</label>
+                  <div onClick={() => staffImageRef.current?.click()} className="cursor-pointer h-40 border-2 border-dashed border-slate-200 rounded-[2.5rem] flex flex-col items-center justify-center overflow-hidden bg-slate-50 hover:bg-slate-100 transition-all relative group shadow-inner">
+                    {staffForm.image ? (
+                      <>
+                        <img src={staffForm.image} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-brand-dark/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button onClick={(e) => { e.stopPropagation(); setStaffForm(prev => ({ ...prev, image: '' })); }} className="p-3 bg-red-500 text-white rounded-2xl transform scale-90 group-hover:scale-100 transition-all"><Trash2 className="h-5 w-5" /></button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="text-center">
+                        <Camera className="text-slate-300 h-10 w-10 mx-auto mb-2" />
+                        <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Kliko për të ngarkuar</span>
+                      </div>
+                    )}
+                  </div>
+                  <input type="file" hidden ref={staffImageRef} accept="image/*" onChange={async e => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const base64 = await handleFileRead(file);
+                      const compressed = await compressImage(base64);
+                      setStaffForm(prev => ({ ...prev, image: compressed }));
+                    }
+                  }} />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Rrjetet Sociale</label>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Foto e Profilat</label>
-                    <div onClick={() => staffImageRef.current?.click()} className="cursor-pointer h-40 border-2 border-dashed border-slate-200 rounded-[2.5rem] flex flex-col items-center justify-center overflow-hidden bg-slate-50 hover:bg-slate-100 transition-all relative group shadow-inner">
-                      {staffForm.image ? (
-                        <>
-                          <img src={staffForm.image} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-brand-dark/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <button onClick={(e) => { e.stopPropagation(); setStaffForm(prev => ({...prev, image: ''})); }} className="p-3 bg-red-500 text-white rounded-2xl transform scale-90 group-hover:scale-100 transition-all"><Trash2 className="h-5 w-5" /></button>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="text-center">
-                          <Camera className="text-slate-300 h-10 w-10 mx-auto mb-2" />
-                          <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Kliko për të ngarkuar</span>
-                        </div>
-                      )}
+                    <div className="flex items-center space-x-3 group">
+                      <div className="w-10 h-10 bg-brand-blue/10 rounded-xl flex items-center justify-center text-brand-blue group-focus-within:bg-brand-blue group-focus-within:text-white transition-all">
+                        <Facebook className="h-4 w-4" />
+                      </div>
+                      <input type="text" placeholder="Facebook URL" className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all" value={staffForm.socials.facebook} onChange={e => setStaffForm(prev => ({ ...prev, socials: { ...prev.socials, facebook: e.target.value } }))} />
                     </div>
-                    <input type="file" hidden ref={staffImageRef} accept="image/*" onChange={async e => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const base64 = await handleFileRead(file);
-                        const compressed = await compressImage(base64);
-                        setStaffForm(prev => ({...prev, image: compressed}));
-                      }
-                    }} />
-                  </div>
-                  <div className="space-y-4">
-                    <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Rrjetet Sociale</label>
-                    <div className="space-y-3">
-                      <div className="flex items-center space-x-3 group">
-                        <div className="w-10 h-10 bg-brand-blue/10 rounded-xl flex items-center justify-center text-brand-blue group-focus-within:bg-brand-blue group-focus-within:text-white transition-all">
-                          <Facebook className="h-4 w-4" />
-                        </div>
-                        <input type="text" placeholder="Facebook URL" className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-brand-blue/20 transition-all" value={staffForm.socials.facebook} onChange={e => setStaffForm(prev => ({...prev, socials: {...prev.socials, facebook: e.target.value}}))} />
+                    <div className="flex items-center space-x-3 group">
+                      <div className="w-10 h-10 bg-brand-pink/10 rounded-xl flex items-center justify-center text-brand-pink group-focus-within:bg-brand-pink group-focus-within:text-white transition-all">
+                        <Instagram className="h-4 w-4" />
                       </div>
-                      <div className="flex items-center space-x-3 group">
-                        <div className="w-10 h-10 bg-brand-pink/10 rounded-xl flex items-center justify-center text-brand-pink group-focus-within:bg-brand-pink group-focus-within:text-white transition-all">
-                          <Instagram className="h-4 w-4" />
-                        </div>
-                        <input type="text" placeholder="Instagram URL" className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-brand-pink/20 transition-all" value={staffForm.socials.instagram} onChange={e => setStaffForm(prev => ({...prev, socials: {...prev.socials, instagram: e.target.value}}))} />
+                      <input type="text" placeholder="Instagram URL" className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-brand-pink/20 transition-all" value={staffForm.socials.instagram} onChange={e => setStaffForm(prev => ({ ...prev, socials: { ...prev.socials, instagram: e.target.value } }))} />
+                    </div>
+                    <div className="flex items-center space-x-3 group">
+                      <div className="w-10 h-10 bg-brand-cyan/10 rounded-xl flex items-center justify-center text-brand-cyan group-focus-within:bg-brand-cyan group-focus-within:text-white transition-all">
+                        <Linkedin className="h-4 w-4" />
                       </div>
-                      <div className="flex items-center space-x-3 group">
-                        <div className="w-10 h-10 bg-brand-cyan/10 rounded-xl flex items-center justify-center text-brand-cyan group-focus-within:bg-brand-cyan group-focus-within:text-white transition-all">
-                          <Linkedin className="h-4 w-4" />
-                        </div>
-                        <input type="text" placeholder="LinkedIn URL" className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-brand-cyan/20 transition-all" value={staffForm.socials.linkedin} onChange={e => setStaffForm(prev => ({...prev, socials: {...prev.socials, linkedin: e.target.value}}))} />
-                      </div>
+                      <input type="text" placeholder="LinkedIn URL" className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-bold outline-none focus:ring-2 focus:ring-brand-cyan/20 transition-all" value={staffForm.socials.linkedin} onChange={e => setStaffForm(prev => ({ ...prev, socials: { ...prev.socials, linkedin: e.target.value } }))} />
                     </div>
                   </div>
                 </div>
-                <div className="pt-4">
-                  <button onClick={handleSaveStaff} className="w-full py-4.5 bg-brand-cyan text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-brand-cyan/20 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] transition-all">
-                    <Save className="h-4 w-4 mr-2" /> {t('admin.save')}
-                  </button>
-                </div>
-             </div>
+              </div>
+              <div className="pt-4">
+                <button onClick={handleSaveStaff} className="w-full py-4.5 bg-brand-cyan text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-brand-cyan/20 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] transition-all">
+                  <Save className="h-4 w-4 mr-2" /> {t('admin.save')}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -1582,7 +1506,7 @@ const AdminDashboard: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 shadow-inner">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Statusi Aktual</p>
                     <div className="flex items-center space-x-3">
@@ -1599,7 +1523,7 @@ const AdminDashboard: React.FC = () => {
                       "{showAppDetails.motivation || "Nuk ka mesazh të bashkangjitur."}"
                     </p>
                   </div>
-                  
+
                   <div className="bg-brand-cyan/5 p-6 rounded-3xl border border-brand-cyan/10">
                     <p className="text-[10px] font-black text-brand-cyan uppercase tracking-[0.2em] mb-3">Projekti i Synuar</p>
                     <div className="flex items-center space-x-3">
@@ -1611,13 +1535,13 @@ const AdminDashboard: React.FC = () => {
               </div>
 
               <div className="flex gap-4 pt-6">
-                <button 
+                <button
                   onClick={() => handleAppAction(showAppDetails.id, ApplicationStatus.REJECTED)}
                   className="flex-1 py-4.5 bg-slate-100 text-slate-500 rounded-[1.5rem] font-black uppercase text-[11px] tracking-widest hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center"
                 >
                   <XCircle className="h-5 w-5 mr-2" /> {t('admin.reject')}
                 </button>
-                <button 
+                <button
                   onClick={() => handleAppAction(showAppDetails.id, ApplicationStatus.APPROVED)}
                   className="flex-[2] py-4.5 bg-brand-lime text-white rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-brand-lime/20 flex items-center justify-center hover:scale-[1.02] active:scale-[0.98] transition-all"
                 >
@@ -1643,20 +1567,20 @@ const AdminDashboard: React.FC = () => {
             <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">{t('admin.partnerName')}</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all"
                   value={partnerForm.name}
-                  onChange={(e) => setPartnerForm({...partnerForm, name: e.target.value})}
+                  onChange={(e) => setPartnerForm({ ...partnerForm, name: e.target.value })}
                 />
               </div>
               <div>
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">{t('admin.partnerWebsite')}</label>
-                <input 
-                  type="url" 
+                <input
+                  type="url"
                   className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-sm outline-none focus:ring-4 focus:ring-brand-orange/10 transition-all"
                   value={partnerForm.website}
-                  onChange={(e) => setPartnerForm({...partnerForm, website: e.target.value})}
+                  onChange={(e) => setPartnerForm({ ...partnerForm, website: e.target.value })}
                   placeholder="https://example.com"
                 />
               </div>
@@ -1674,17 +1598,17 @@ const AdminDashboard: React.FC = () => {
                     ) : (
                       <Upload className="h-6 w-6 text-slate-300" />
                     )}
-                    <input 
-                      type="file" 
+                    <input
+                      type="file"
                       ref={partnerLogoRef}
-                      className="absolute inset-0 opacity-0 cursor-pointer" 
+                      className="absolute inset-0 opacity-0 cursor-pointer"
                       accept="image/*"
                       onChange={handlePartnerLogoUpload}
                     />
                   </div>
                   <div className="flex-grow space-y-2">
                     <p className="text-[9px] font-bold text-slate-400 uppercase leading-relaxed">Rekomandohet format PNG me sfond transparent.</p>
-                    <button 
+                    <button
                       onClick={() => partnerLogoRef.current?.click()}
                       className="text-[9px] font-black text-brand-orange uppercase tracking-widest hover:underline"
                     >
@@ -1695,13 +1619,13 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
             <div className="p-8 bg-slate-50/50 border-t border-slate-100 flex space-x-4">
-              <button 
+              <button
                 onClick={handleSavePartner}
                 className="flex-grow bg-brand-orange text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-brand-orange/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
                 {t('admin.save')}
               </button>
-              <button 
+              <button
                 onClick={() => setShowPartnerModal(false)}
                 className="px-8 bg-white text-slate-400 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest border border-slate-200 hover:bg-slate-50 transition-all"
               >
@@ -1729,7 +1653,7 @@ const AdminDashboard: React.FC = () => {
             <div className="p-10 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
               <div className="space-y-3">
                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Kategoria (Key)</label>
-                <select 
+                <select
                   className="w-full px-8 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-xs outline-none focus:ring-4 focus:ring-brand-cyan/10 transition-all appearance-none"
                   value={assetForm.key}
                   onChange={(e) => setAssetForm({ ...assetForm, key: e.target.value })}
@@ -1741,7 +1665,7 @@ const AdminDashboard: React.FC = () => {
 
               <div className="space-y-4">
                 <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest ml-1">Imazhi</label>
-                <div 
+                <div
                   onClick={() => assetFileRef.current?.click()}
                   className="cursor-pointer aspect-video border-2 border-dashed border-slate-200 rounded-[2.5rem] flex flex-col items-center justify-center overflow-hidden bg-slate-50 hover:bg-slate-100 transition-all relative group shadow-inner"
                 >
@@ -1763,13 +1687,13 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
             <div className="p-10 bg-slate-50/50 border-t border-slate-100 flex space-x-4">
-              <button 
+              <button
                 onClick={handleSaveAsset}
                 className="flex-[2] bg-brand-cyan text-white py-5 rounded-[1.5rem] font-black uppercase text-[11px] tracking-[0.2em] shadow-xl shadow-brand-cyan/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
                 {t('admin.save')}
               </button>
-              <button 
+              <button
                 onClick={() => setShowAssetModal(false)}
                 className="flex-1 bg-white text-slate-400 py-5 rounded-[1.5rem] font-black uppercase text-[11px] tracking-widest border border-slate-200 hover:bg-slate-50 transition-all"
               >
@@ -1792,15 +1716,15 @@ const AdminDashboard: React.FC = () => {
               <p className="text-sm text-slate-500 font-medium leading-relaxed">
                 {t('admin.deleteConfirm')}
               </p>
-              
+
               <div className="flex gap-4 mt-10">
-                <button 
+                <button
                   onClick={() => setDeleteConfirm(null)}
                   className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-slate-200 transition-all"
                 >
                   {t('admin.cancel')}
                 </button>
-                <button 
+                <button
                   onClick={confirmDelete}
                   className="flex-1 py-4 bg-red-500 text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-red-500/20 hover:bg-red-600 transition-all"
                 >
@@ -1828,19 +1752,19 @@ const AdminDashboard: React.FC = () => {
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Vlera (p.sh. 500+)</label>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     className="w-full px-8 py-5 bg-slate-50 border border-slate-200 rounded-[2rem] font-black text-2xl text-brand-dark outline-none focus:ring-4 focus:ring-brand-pink/10 transition-all"
                     value={statsForm.value}
-                    onChange={(e) => setStatsForm({...statsForm, value: e.target.value})}
+                    onChange={(e) => setStatsForm({ ...statsForm, value: e.target.value })}
                   />
                 </div>
                 <div className="space-y-3">
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ikona</label>
-                  <select 
+                  <select
                     className="w-full px-8 py-5 bg-slate-50 border border-slate-200 rounded-[2rem] font-bold text-sm text-brand-dark outline-none focus:ring-4 focus:ring-brand-pink/10 transition-all"
                     value={statsForm.iconName}
-                    onChange={(e) => setStatsForm({...statsForm, iconName: e.target.value})}
+                    onChange={(e) => setStatsForm({ ...statsForm, iconName: e.target.value })}
                   >
                     {['Star', 'Globe', 'UserPlus', 'Sparkles', 'Target', 'Heart', 'Users', 'Briefcase', 'GraduationCap', 'Trophy'].map(icon => (
                       <option key={icon} value={icon}>{icon}</option>
@@ -1850,20 +1774,20 @@ const AdminDashboard: React.FC = () => {
               </div>
               <div className="space-y-3">
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Përshkrimi (p.sh. TË RINJ TË TRAJNUAR)</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   className="w-full px-8 py-5 bg-slate-50 border border-slate-200 rounded-[2rem] font-bold text-sm text-slate-500 outline-none focus:ring-4 focus:ring-brand-pink/10 transition-all uppercase"
                   value={statsForm.label}
-                  onChange={(e) => setStatsForm({...statsForm, label: e.target.value})}
+                  onChange={(e) => setStatsForm({ ...statsForm, label: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ngjyra e Tekstit</label>
-                  <select 
+                  <select
                     className="w-full px-8 py-5 bg-slate-50 border border-slate-200 rounded-[2rem] font-bold text-sm text-brand-dark outline-none focus:ring-4 focus:ring-brand-pink/10 transition-all"
                     value={statsForm.color}
-                    onChange={(e) => setStatsForm({...statsForm, color: e.target.value})}
+                    onChange={(e) => setStatsForm({ ...statsForm, color: e.target.value })}
                   >
                     <option value="text-brand-pink">Pink</option>
                     <option value="text-brand-orange">Orange</option>
@@ -1874,10 +1798,10 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="space-y-3">
                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Ngjyra e Fondit</label>
-                  <select 
+                  <select
                     className="w-full px-8 py-5 bg-slate-50 border border-slate-200 rounded-[2rem] font-bold text-sm text-brand-dark outline-none focus:ring-4 focus:ring-brand-pink/10 transition-all"
                     value={statsForm.bg}
-                    onChange={(e) => setStatsForm({...statsForm, bg: e.target.value})}
+                    onChange={(e) => setStatsForm({ ...statsForm, bg: e.target.value })}
                   >
                     <option value="bg-brand-pink/10">Pink Light</option>
                     <option value="bg-brand-orange/10">Orange Light</option>
@@ -1889,13 +1813,13 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
             <div className="p-10 bg-slate-50/50 border-t border-slate-100 flex space-x-4">
-              <button 
+              <button
                 onClick={handleSaveStat}
                 className="flex-grow bg-brand-dark text-white py-5 rounded-[2rem] font-black uppercase text-xs tracking-widest shadow-xl shadow-brand-dark/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center"
               >
                 <Save className="h-5 w-5 mr-3" /> Ruaj Ndryshimet
               </button>
-              <button 
+              <button
                 onClick={() => setShowStatsModal(false)}
                 className="px-10 bg-white text-slate-400 py-5 rounded-[2rem] font-black uppercase text-xs tracking-widest border border-slate-200 hover:bg-slate-50 transition-all"
               >
