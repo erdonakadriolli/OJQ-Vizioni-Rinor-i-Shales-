@@ -1,10 +1,9 @@
 {
-  "projectId": "gen-lang-client-0563581398",
-  "appId": "1:79172111339:web:b964672e570e37340e67ae",
-  "apiKey": "AIzaSyBho7ZCbFwebOvkafuzcoYDnFlv33T291M",
-  "authDomain": "gen-lang-client-0563581398.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-9d635dbd-f4c7-4e35-8f4f-b6af7ee4f908",
-  "storageBucket": "gen-lang-client-0563581398.firebasestorage.app",
-  "messagingSenderId": "79172111339",
-  "measurementId": ""
+  "projectId": "vizioni-rinor-i-shales",
+  "appId": "1:240907127737:web:f76cf27224e52a75bb4468",
+  "apiKey": "AIzaSyAFlNgxl2Nrg54_Imd1o-6hmd2zfZWtuYw",
+  "authDomain": "vizioni-rinor-i-shales.firebaseapp.com",
+  "storageBucket": "vizioni-rinor-i-shales.firebasestorage.app",
+  "messagingSenderId": "240907127737",
+  "measurementId": "G-98B63H2E7X"
 }

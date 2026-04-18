@@ -15,7 +15,7 @@ import { User, UserRole } from './types';
 import { Facebook, Instagram, Youtube, Mail, Phone, MapPin, ArrowRight, Heart } from 'lucide-react';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { FirestoreProvider } from './context/FirestoreContext';
-import { logout as firebaseLogout, auth } from './firebase';
+import { logout as firebaseLogout, auth, adminEmails } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
 const Footer: React.FC = () => {
@@ -123,13 +123,12 @@ const App: React.FC = () => {
       if (firebaseUser) {
         // If we have a firebase user but no app user, or they differ, sync them
         // Note: We prioritize the admin email for the role
-        const adminEmails = ['donakadriolli@gmail.com', 'vizioniRinoriShales@gmail.com', 'leotrimpajaziti17@gmail.com', 'admin@vizionirinorishales.org'];
-        const isAdmin = adminEmails.includes(firebaseUser.email || '');
+        const isAdminUser = adminEmails.includes(firebaseUser.email || '');
         const syncedUser: User = {
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
-          name: firebaseUser.displayName || 'User',
-          role: isAdmin ? UserRole.ADMIN : UserRole.VOLUNTEER
+          name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          role: isAdminUser ? UserRole.ADMIN : UserRole.VOLUNTEER
         };
         setUser(syncedUser);
         localStorage.setItem('ngo_user_session', JSON.stringify(syncedUser));

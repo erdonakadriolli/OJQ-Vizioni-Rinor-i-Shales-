@@ -23,13 +23,14 @@ export const auth = getAuth(app);
 
 export const logout = () => signOut(auth);
 
-export const isAdmin = (user: any) => {
-  const adminEmails = [
+export const adminEmails = [
     'donakadriolli@gmail.com',
     'vizioniRinoriShales@gmail.com',
     'leotrimpajaziti17@gmail.com',
     'admin@vizionirinorishales.org'
   ];
+
+export const isAdmin = (user: any) => {
   return user && adminEmails.includes(user.email);
 };
 
