@@ -104,6 +104,7 @@ export const translations: Record<'AL' | 'EN', Record<string, string>> = {
     'projects.impl': 'Zbatimi dhe Detajet',
     'projects.period': 'Periudha',
     'projects.participants': 'Pjesëmarrësit',
+    'projects.loadMore': 'Shiko më shumë projekte',
 
     // Login
     'login.title': 'Mirë se vini',
@@ -287,6 +288,7 @@ export const translations: Record<'AL' | 'EN', Record<string, string>> = {
     'projects.impl': 'Implementation & Details',
     'projects.period': 'Period',
     'projects.participants': 'Participants',
+    'projects.loadMore': 'Load More Projects',
 
     // Login
     'login.title': 'Welcome',
