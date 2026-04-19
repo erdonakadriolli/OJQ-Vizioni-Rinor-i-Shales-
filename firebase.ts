@@ -9,17 +9,16 @@ const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || firebaseConfigBlueprint.apiKey,
 };
 
-// Validate that the API key is not the placeholder
+// Validate that the API key is provided
 if (!firebaseConfig.apiKey || firebaseConfig.apiKey === 'YOUR_FIREBASE_API_KEY') {
-  console.error("FIREBASE ERROR: API Key is missing or invalid. Please check your .env file or firebase-applet-config.json");
-  // Provide a slightly more helpful error for the developer
   if (import.meta.env.DEV) {
+    console.error("FIREBASE ERROR: API Key is missing or set to placeholder. Please check your .env file or firebase-applet-config.json");
     console.warn("Vite environment variables prefixed with VITE_ are required for client-side access.");
   }
 }
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = getFirestore(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
 export { ref, uploadBytes, getDownloadURL };
@@ -43,8 +42,8 @@ export const isAdmin = (user: any) => {
   return user && adminEmails.includes(user.email);
 };
 
-// Test connection
-async function testConnection() {
+// Test connection - Exported but not run automatically to avoid side effects
+export async function testConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
@@ -53,7 +52,6 @@ async function testConnection() {
     }
   }
 }
-testConnection();
 
 export enum OperationType {
   CREATE = 'create',

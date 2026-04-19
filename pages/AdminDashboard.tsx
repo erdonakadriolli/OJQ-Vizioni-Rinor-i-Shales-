@@ -432,14 +432,13 @@ const AdminDashboard: React.FC = () => {
 
     setIsAiGenerating(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
       const prompt = promptType === 'project'
         ? `Write an inspiring and detailed description for a project titled "${title}" for the NGO "Vizioni Rinor i Shalës" (VRSH) in the village of Shale, Lipjan. Focus on youth empowerment and community impact. Do not use "**" for bolding; use clear structure instead. Language: ${language === 'AL' ? 'Albanian' : 'English'}.`
         : `Write a professional and engaging news article/summary for "${title}" for the NGO "Vizioni Rinor i Shalës" (VRSH). The tone should be positive and community-focused. Do not use "**" for bolding; use clear structure instead. Language: ${language === 'AL' ? 'Albanian' : 'English'}.`;
 
-      // Fix: Use simple string for contents to comply with latest SDK guidelines for text generation
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-1.5-flash',
         contents: prompt,
       });
 
