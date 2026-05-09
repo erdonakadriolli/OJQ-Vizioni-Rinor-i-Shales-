@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useFirestore } from '../context/FirestoreContext';
 import { NewsItem } from '../types';
-import { Calendar, Newspaper, Tv, FileText, Download, ExternalLink, Search, ArrowRight } from 'lucide-react';
+import { Calendar, Newspaper, Tv, FileText, Download, ExternalLink, Search, ArrowRight, Play } from 'lucide-react';
 
 const News: React.FC = () => {
   const { category } = useParams<{ category: string }>();
@@ -65,6 +65,22 @@ const News: React.FC = () => {
     return <Newspaper className="h-6 w-6 text-brand-pink" />;
   };
 
+  const getMediaThumbnail = (url: string | undefined) => {
+    if (!url) return 'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&q=80&w=800';
+    
+    const ytRegExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const ytMatch = url.match(ytRegExp);
+    if (ytMatch && ytMatch[2].length === 11) {
+      return `https://img.youtube.com/vi/${ytMatch[2]}/hqdefault.jpg`;
+    }
+    
+    if (url.includes('facebook.com') || url.includes('fb.watch')) {
+      return 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800';
+    }
+    
+    return 'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&q=80&w=800';
+  };
+
   return (
     <div className="pt-32 pb-24 px-6 bg-slate-50 min-h-screen">
       <div className="max-w-5xl mx-auto">
@@ -90,6 +106,41 @@ const News: React.FC = () => {
           <div className="bg-white p-20 rounded-[3.5rem] text-center border border-slate-100 shadow-sm animate-in fade-in">
             <Newspaper className="h-16 w-16 text-slate-100 mx-auto mb-6" />
             <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-[10px]">{t('news.empty')}</p>
+          </div>
+        ) : category === 'media' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredNews.map((item) => (
+              <a 
+                key={item.id} 
+                href={item.fileUrl || '#'} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all border border-slate-100 group animate-in slide-in-from-bottom-4 block flex flex-col h-full"
+              >
+                <div className="relative aspect-video bg-slate-100 overflow-hidden flex-shrink-0">
+                  <img 
+                    src={getMediaThumbnail(item.fileUrl)} 
+                    alt={item.title} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-brand-dark/20 group-hover:bg-brand-dark/10 transition-colors"></div>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <Play className="h-6 w-6 text-brand-blue fill-brand-blue ml-1" />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-8 flex flex-col flex-grow">
+                  <span className="flex items-center text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                    <Calendar className="h-3 w-3 mr-2" />
+                    {item.datePosted}
+                  </span>
+                  <h3 className="text-xl font-black text-brand-dark uppercase leading-tight group-hover:text-brand-pink transition-colors line-clamp-2">
+                    {item.title}
+                  </h3>
+                </div>
+              </a>
+            ))}
           </div>
         ) : (
           <div className="space-y-8">

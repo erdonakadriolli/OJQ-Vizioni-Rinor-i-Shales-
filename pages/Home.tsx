@@ -28,7 +28,7 @@ const Home: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (isLoading) return; // Don't set images yet if still loading from DB
+    if (isLoading) return; // Wait for firestore data to load
 
     const images = siteAssets
       .filter(asset => asset.key === 'hero_images' && asset.type === 'image')
@@ -37,7 +37,7 @@ const Home: React.FC = () => {
     if (images.length > 0) {
       setHeroImages(images);
     } else {
-      // Fallback if none in DB and NOT loading
+      // Fallback images if no custom ones are uploaded
       setHeroImages([
         "https://picsum.photos/seed/vizioni1/1920/1080",
         "https://picsum.photos/seed/vizioni2/1920/1080",
@@ -91,30 +91,34 @@ const Home: React.FC = () => {
             <div className="absolute inset-0 bg-brand-pink rounded-[2rem] lg:rounded-[3rem] rotate-3 translate-x-4 translate-y-4 opacity-10"></div>
             <div className="absolute inset-0 bg-brand-lime rounded-[2rem] lg:rounded-[3rem] -rotate-3 -translate-x-4 -translate-y-4 opacity-10"></div>
 
-            <div className="relative h-full w-full group cursor-pointer" onClick={() => setActiveHeroIdx((activeHeroIdx + 1) % heroImages.length)}>
-              {heroImages.map((src, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={false}
-                  animate={{
-                    scale: activeHeroIdx === idx ? 1 : 0.9,
-                    rotate: activeHeroIdx === idx ? 0 : (idx % 2 === 0 ? 3 : -3),
-                    opacity: activeHeroIdx === idx ? 1 : 0,
-                    zIndex: activeHeroIdx === idx ? 10 : 0,
-                    x: activeHeroIdx === idx ? 0 : (idx < activeHeroIdx ? -100 : 100)
-                  }}
-                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute inset-0 rounded-[2rem] lg:rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white"
-                >
-                  <img
-                    src={src}
-                    alt={`Hero ${idx}`}
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/80 via-transparent to-transparent"></div>
-                </motion.div>
-              ))}
+            <div className="relative h-full w-full group cursor-pointer" onClick={() => heroImages.length > 0 && setActiveHeroIdx((activeHeroIdx + 1) % heroImages.length)}>
+              {heroImages.length === 0 ? (
+                <div className="absolute inset-0 rounded-[2rem] lg:rounded-[3rem] bg-slate-200 animate-pulse border-4 border-white shadow-2xl"></div>
+              ) : (
+                heroImages.map((src, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={false}
+                    animate={{
+                      scale: activeHeroIdx === idx ? 1 : 0.9,
+                      rotate: activeHeroIdx === idx ? 0 : (idx % 2 === 0 ? 3 : -3),
+                      opacity: activeHeroIdx === idx ? 1 : 0,
+                      zIndex: activeHeroIdx === idx ? 10 : 0,
+                      x: activeHeroIdx === idx ? 0 : (idx < activeHeroIdx ? -100 : 100)
+                    }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    className="absolute inset-0 rounded-[2rem] lg:rounded-[3rem] overflow-hidden shadow-2xl border-4 border-white"
+                  >
+                    <img
+                      src={src}
+                      alt={`Hero ${idx}`}
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/80 via-transparent to-transparent"></div>
+                  </motion.div>
+                ))
+              )}
 
               <div className="absolute bottom-8 lg:bottom-12 left-8 lg:left-12 right-8 lg:right-12 z-20">
                 <div className="flex items-center space-x-4 mb-4">

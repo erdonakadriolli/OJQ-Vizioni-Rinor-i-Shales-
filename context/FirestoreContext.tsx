@@ -87,6 +87,7 @@ export const FirestoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     const unsubscribeAssets = onSnapshot(qAssets, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setSiteAssets(data);
+      if (isLoading) setIsLoading(false);
     }, (err) => {
       console.warn('Firestore site_assets access error:', err.message);
     });
@@ -95,13 +96,10 @@ export const FirestoreProvider: React.FC<{ children: ReactNode }> = ({ children 
     const unsubscribeContent = onSnapshot(qContent, (snapshot) => {
       const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setSiteContent(data);
-      // Data is arriving (either from cache or server)
-      if (isLoading) {
-        setIsLoading(false);
-      }
+      if (isLoading) setIsLoading(false);
     }, (err) => {
       console.warn('Firestore site_content access error:', err.message);
-      setIsLoading(false);
+      if (isLoading) setIsLoading(false);
     });
 
     return () => {
