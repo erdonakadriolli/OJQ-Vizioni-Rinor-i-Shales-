@@ -65,10 +65,14 @@ async function getFirestoreData() {
 
 function needsWebSearch(message) {
   const msg = message.toLowerCase();
-  const internalTopics = ["erdona", "leotrim", "pajaziti", "kadriolli", "vrsh", "vizioni", "shalë", "shalës", "shales", "stafi", "projektet", "lajmet", "organizata", "vullnetar", "bordi", "asambleja"];
+  // Kërko gjithmonë në web për pyetje rreth personave specifikë
+  const peopleQueries = ["erdona kadriolli", "leotrim pajaziti", "burim shamolli", "euresa karpuzi"];
+  if (peopleQueries.some(k => msg.includes(k))) return true;
+  // Mos kërko në web për pyetje të përgjithshme rreth organizatës
+  const internalTopics = ["vrsh", "vizioni", "shalë", "shalës", "shales", "stafi", "projektet", "lajmet", "organizata", "vullnetar", "bordi", "asambleja"];
   if (internalTopics.some(k => msg.includes(k))) return false;
-  const keywords = ["kërko", "search", "gjej", "lajme", "news", "facebook", "instagram", "aktuale", "sot", "tani", "2024", "2025", "2026"];
-  return keywords.some(k => msg.includes(k));
+  // Kërko në web për gjithçka tjetër
+  return true;
 }
 
 export default async function handler(req, res) {
