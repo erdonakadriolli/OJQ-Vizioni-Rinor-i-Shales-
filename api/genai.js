@@ -65,11 +65,11 @@ async function getFirestoreData() {
 
 function needsWebSearch(message) {
   const msg = message.toLowerCase();
-  // Për pyetje rreth OJQ-së - vetëm databaza, jo internet
-  const internalTopics = ["vrsh", "vizioni", "shalë", "shalës", "shales", "ojq", "organizat", "projekt", "lajm", "staf", "vullnetar", "bord", "asamblea", "erdona", "leotrim", "bleriana", "kadriolli", "pajaziti", "karpuzi", "shamolli", "hetemi"];
-  if (internalTopics.some(k => msg.includes(k))) return false;
-  // Për gjithçka tjetër - kërko në internet
-  return true;
+  // Për pyetje rreth OJQ-së - kërko në internet + databazë
+  const ojqTopics = ["vrsh", "vizioni", "shalë", "shalës", "shales", "ojq", "organizat", "projekt", "lajm", "staf", "vullnetar", "bord", "asamblea", "erdona", "bleriana", "kadriolli", "pajaziti", "karpuzi", "shamolli", "hetemi"];
+  if (ojqTopics.some(k => msg.includes(k))) return true;
+  // Për gjithçka tjetër - jo internet
+  return false;
 }
 
 export default async function handler(req, res) {
