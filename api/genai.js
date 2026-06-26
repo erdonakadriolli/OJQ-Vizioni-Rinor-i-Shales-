@@ -1,55 +1,131 @@
-import { GoogleGenAI } from "@google/genai";
+import Groq from "groq-sdk";
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+
+async function searchWeb(query) {
+  try {
+    const res = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api_key: process.env.TAVILY_API_KEY,
+        query,
+        search_depth: "basic",
+        max_results: 5,
+        include_answer: true,
+      }),
+    });
+    const data = await res.json();
+    if (data.answer) return `Rezultate nga interneti:\n${data.answer}\n\nBurime:\n${data.results?.map(r => `- ${r.title}: ${r.content?.slice(0, 200)}`).join("\n") || ""}`;
+    return data.results?.map(r => `- ${r.title}: ${r.content?.slice(0, 300)}`).join("\n") || "";
+  } catch {
+    return "";
+  }
+}
+
+async function getFirestoreData() {
+  try {
+    const projectId = "vizioni-rinor-i-shales";
+    const baseUrl = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
+
+    const fetchCollection = async (col) => {
+      const res = await fetch(`${baseUrl}/${col}?pageSize=20`);
+      const data = await res.json();
+      return data.documents || [];
+    };
+
+    const parseDoc = (doc) => {
+      const fields = doc.fields || {};
+      const result = {};
+      for (const [key, val] of Object.entries(fields)) {
+        result[key] = val.stringValue || val.integerValue || val.booleanValue || val.arrayValue?.values?.map(v => v.stringValue).join(", ") || "";
+      }
+      return result;
+    };
+
+    const [projects, news, staff, stats, partners] = await Promise.all([
+      fetchCollection("projects"),
+      fetchCollection("news"),
+      fetchCollection("staff"),
+      fetchCollection("stats"),
+      fetchCollection("partners"),
+    ]);
+
+    return {
+      projects: projects.map(parseDoc),
+      news: news.map(parseDoc),
+      staff: staff.map(parseDoc),
+      stats: stats.map(parseDoc),
+      partners: partners.map(parseDoc),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function needsWebSearch(message) {
+  const keywords = ["kërko", "search", "gjej", "lajme", "news", "facebook", "instagram", "aktuale", "sot", "tani", "2024", "2025", "2026"];
+  return keywords.some(k => message.toLowerCase().includes(k));
+}
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
     const { messages } = req.body;
+    const lastMessage = messages[messages.length - 1]?.text || "";
 
-    const ai = new GoogleGenAI({ apiKey: process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY });
+    const [dbData, webResults] = await Promise.all([
+      getFirestoreData(),
+      needsWebSearch(lastMessage) ? searchWeb(`Vizioni Rinor i Shalës ${lastMessage}`) : Promise.resolve(""),
+    ]);
 
-    const result = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      systemInstruction: `Ju jeni VIZIONI AI, asistenti inteligjent dhe zyrtar i OJQ "Vizioni Rinor i Shalës" (VRSH). 
-        Përgjigjuni gjithmonë në gjuhën shqipe, jini profesional, miqësor dhe pozitiv. Kur ju pyesin për emrin, thuani: "Unë jam VIZIONI AI".
+    let contextBlock = "";
+    if (dbData) {
+      contextBlock += `\n\nTË DHËNAT AKTUALE NGA DATABAZA E ORGANIZATËS:\n`;
+      if (dbData.projects.length) contextBlock += `\nPROJEKTET (${dbData.projects.length}):\n${dbData.projects.map(p => `- ${p.title}: ${p.description} [${p.status}]`).join("\n")}`;
+      if (dbData.news.length) contextBlock += `\n\nLAJMET E FUNDIT (${dbData.news.length}):\n${dbData.news.slice(0, 5).map(n => `- ${n.title} (${n.datePosted}): ${n.content?.slice(0, 150)}`).join("\n")}`;
+      if (dbData.staff.length) contextBlock += `\n\nSTAFI:\n${dbData.staff.map(s => `- ${s.name}: ${s.role}`).join("\n")}`;
+      if (dbData.stats.length) contextBlock += `\n\nSTATISTIKAT:\n${dbData.stats.map(s => `${s.label}: ${s.value}`).join(", ")}`;
+      if (dbData.partners.length) contextBlock += `\n\nPARTNERËT:\n${dbData.partners.map(p => p.name).join(", ")}`;
+    }
 
-        RREGULLAT E FORMATIMIT DHE DREJTSHKRIMIT (SHUMË TË RËNDËSISHME):
-        - Shkruaj GJITHMONË në Gjuhën Letrare Shqipe (Standarde) me drejtshkrim perfekt.
-        - Përdor saktë shkronjat "Ë" dhe "Ç" në çdo fjalë që e kërkon.
-        - Përdor një ton natyral por zyrtar e mikpritës.
-        - Mos përdor kurrë simbolet "**" për të trashur tekstin direkt. Në vend të kësaj, përdor rreshta të rinj (Enter) dhe tituj me shkronja të MËDHA.
+    if (webResults) {
+      contextBlock += `\n\nINFORMACION NGA INTERNETI:\n${webResults}`;
+    }
 
-        IDENTITETI DHE MISIONI:
-        - OJQ "Vizioni Rinor i Shalës" (VRSH) është themeluar në vitin 2016 në fshatin Shalë, Komuna e Lipjanit.
-        - VIZIONI: Një botë në të cilën të rinjtë janë të fuqizuar të ngrihen për veten dhe të tjerët.
-        - MISIONI: Avancimi i interesave të përbashkëta të të rinjve duke zhvilluar kapacitetet e tyre dhe duke rritur pjesëmarrjen e tyre në vendimmarrje.
-        - EKSPERIENCA: 9 vite përvojë aktive dhe mbi 25 projekte të zbatuara.
-        - STATISTIKAT: 6,929 përfitues direkt dhe rreth 10,000 përfitues indirekt.
+    const systemPrompt = `Ju jeni VIZIONI AI, asistenti inteligjent dhe zyrtar i OJQ "Vizioni Rinor i Shalës" (VRSH).
+Përgjigjuni GJITHMONË në gjuhën shqipe, jini profesional, miqësor dhe pozitiv.
+Kur pyesin për emrin, thuani: "Unë jam VIZIONI AI".
 
-        PROJEKTET DHE AKTIVITETET KRYESORE (2024-2025):
-        1. RINIA FEST 2025: Organizuar në Gusht 2025 në Sheshin "Adem Jashari" në Lipjan. Përfshiu Panairin Rinor me eksperienca VR (Realiteti Virtual), Koncertin për Ditën Ndërkombëtare të Rinisë dhe Konferencën Rinore ku u diskutua për tregun e punës, shëndetin mendor dhe teknologjinë.
-        2. PARANDALIMI I EKSTREMIZMIT TË DHUNSHËM (ATRC): Projekt 6-mujor (Shkurt-Korrik 2025) për nxënësit e Lipjanit. Përfshiu sesione leximi me librin "Mrekullia" (R.J. Palacio), kamp treditore në Rugovë mbi zhvillimin personal dhe fushata online për paqe.
-        3. FUQIZIMI PËR VENDIMMARRJE (KCSF/OSBE): Përgatitja e të rinjve për pjesëmarrje në demokracinë lokale dhe mobilizim të komunitetit.
-        4. GJITHËPËRFSHIRJA E GRAVE (NDI): Fuqizimi i grave në 3 fshatra të Lipjanit për të rritur numrin e tyre në udhëheqjen e këshillave lokale.
-        5. TRASHËGIMIA DHE KUJTESA: Projekti "Kujtesa Kolektive e Luftës 98-99 në Grykën e Shalës" me homazhe dhe ekspozita fotografike.
+RREGULLAT E FORMATIMIT:
+- Shkruaj në Gjuhën Letrare Shqipe me drejtshkrim perfekt.
+- Përdor saktë shkronjat "Ë" dhe "Ç".
+- Mos përdor simbolet ** ose ### drejtpërdrejt.
+- Përdor rreshta të rinj dhe tituj me shkronja të MËDHA.
 
-        PARTNERËT DHE DONATORËT:
-        IPKO Foundation, Zyra e Presidentes, Kosovo 2.0, KCSF, OSCE, ATRC, PEN, NDI, Democracy Plus, Germin, UNICEF Innovations Lab Kosovo, Ministria e Kulturës (MKRS), Drejtoria për Kulturë (DKRS), Besiana Kadriolli, etj.
+IDENTITETI:
+- OJQ "Vizioni Rinor i Shalës" (VRSH) u themelua në 2016 në fshatin Shalë, Komuna e Lipjanit.
+- VIZIONI: Një botë ku të rinjtë janë të fuqizuar.
+- MISIONI: Avancimi i interesave të të rinjve dhe rritja e pjesëmarrjes në vendimmarrje.
+- Drejtori Ekzekutiv: Leotrim Pajaziti.
+- Faqja është ndërtuar nga ERDONA KADRIOLLI.
+${contextBlock}`;
 
-        STRUKTURA ORGANIZATIVE:
-        - Drejtori Ekzekutiv: Leotrim Pajaziti.
-        - Bordi: Burim Shamolli, Shkelzen Karpuzi.
-        - Asambleja: Euresa Karpuzi (Kryesuese), Miranda Karpuzi, Erdona Kadriolli, Erjona Kadriolli, Viola Hetemi, Bleriana Kadriolli.
+    const groqMessages = messages.map(m => ({
+      role: m.role === "model" ? "assistant" : "user",
+      content: m.text,
+    }));
 
-        SI TË ANËTARËSOHESH:
-        Të rinjtë mund të bëhen pjesë duke marrë pjesë në aktivitete, duke u bërë vullnetarë ose duke kontribuar med ide të reja. VRSH inkurajon çdo zë të ri.
-
-        KRIJUESI I WEBSITE-IT:
-        Kjo platformë është punuar nga ERDONA KADRIOLLI. Përgjigjuni me krenari për këtë fakt.`,
-      contents: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
+    const completion = await groq.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [{ role: "system", content: systemPrompt }, ...groqMessages],
+      temperature: 0.7,
+      max_tokens: 1024,
     });
 
-    res.status(200).json({ text: result.text || "Më falni, ka ndodhur një gabim." });
+    const text = completion.choices[0]?.message?.content || "Më falni, ka ndodhur një gabim.";
+    res.status(200).json({ text });
   } catch (err) {
     console.error(err);
     res.status(200).json({ text: `VIZIONI AI është përkohësisht i padisponueshëm. Gabimi: ${err.message}` });
