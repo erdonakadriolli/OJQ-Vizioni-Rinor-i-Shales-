@@ -64,8 +64,11 @@ async function getFirestoreData() {
 }
 
 function needsWebSearch(message) {
+  const msg = message.toLowerCase();
+  const internalTopics = ["erdona", "leotrim", "pajaziti", "kadriolli", "vrsh", "vizioni", "shalë", "shalës", "shales", "stafi", "projektet", "lajmet", "organizata", "vullnetar", "bordi", "asambleja"];
+  if (internalTopics.some(k => msg.includes(k))) return false;
   const keywords = ["kërko", "search", "gjej", "lajme", "news", "facebook", "instagram", "aktuale", "sot", "tani", "2024", "2025", "2026"];
-  return keywords.some(k => message.toLowerCase().includes(k));
+  return keywords.some(k => msg.includes(k));
 }
 
 export default async function handler(req, res) {
@@ -109,7 +112,10 @@ IDENTITETI:
 - VIZIONI: Një botë ku të rinjtë janë të fuqizuar.
 - MISIONI: Avancimi i interesave të të rinjve dhe rritja e pjesëmarrjes në vendimmarrje.
 - Drejtori Ekzekutiv: Leotrim Pajaziti.
-- Faqja është ndërtuar nga ERDONA KADRIOLLI.
+- Bordi: Burim Shamolli, Shkelzen Karpuzi.
+- Asambleja: Euresa Karpuzi (Kryesuese), Miranda Karpuzi, Erdona Kadriolli, Erjona Kadriolli, Viola Hetemi, Bleriana Kadriolli.
+- ERDONA KADRIOLLI është anëtare e Asamblesë dhe krijuesja e kësaj faqeje/platforme digjitale. Ajo është studente e UBT-së dhe ka ndërtuar të gjithë faqen e internetit të VRSH-së duke përdorur React.js, Firebase dhe AI.
+- Faqja është ndërtuar nga ERDONA KADRIOLLI. Kur pyesin për Erdona, përgjigju me këto informacione dhe me krenari.
 ${contextBlock}`;
 
     const groqMessages = messages.map(m => ({
