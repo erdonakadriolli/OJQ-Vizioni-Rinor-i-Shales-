@@ -64,7 +64,11 @@ async function getFirestoreData() {
 }
 
 function needsWebSearch(message) {
-  // Kërko gjithmonë në internet për çdo pyetje
+  const msg = message.toLowerCase();
+  // Për pyetje rreth OJQ-së - vetëm databaza, jo internet
+  const internalTopics = ["vrsh", "vizioni", "shalë", "shalës", "shales", "ojq", "organizat", "projekt", "lajm", "staf", "vullnetar", "bord", "asamblea", "erdona", "leotrim", "bleriana", "kadriolli", "pajaziti", "karpuzi", "shamolli", "hetemi"];
+  if (internalTopics.some(k => msg.includes(k))) return false;
+  // Për gjithçka tjetër - kërko në internet
   return true;
 }
 
@@ -108,7 +112,7 @@ IDENTITETI:
 - OJQ "Vizioni Rinor i Shalës" (VRSH) u themelua në 2016 në fshatin Shalë, Komuna e Lipjanit.
 - VIZIONI: Një botë ku të rinjtë janë të fuqizuar.
 - MISIONI: Avancimi i interesave të të rinjve dhe rritja e pjesëmarrjes në vendimmarrje.
-- Drejtori Ekzekutiv: Leotrim Pajaziti.
+- Drejtoresha Ekzekutive: Bleriana Kadriolli.
 - Bordi: Burim Shamolli, Shkelzen Karpuzi.
 - Asambleja: Euresa Karpuzi (Kryesuese), Miranda Karpuzi, Erdona Kadriolli, Erjona Kadriolli, Viola Hetemi, Bleriana Kadriolli.
 - ERDONA KADRIOLLI është anëtare e Asamblesë dhe krijuesja e kësaj faqeje/platforme digjitale. Ajo është studente e UBT-së dhe ka ndërtuar të gjithë faqen e internetit të VRSH-së duke përdorur React.js, Firebase dhe AI.
