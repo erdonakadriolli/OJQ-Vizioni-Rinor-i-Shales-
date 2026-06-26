@@ -438,7 +438,7 @@ const AdminDashboard: React.FC = () => {
         : `Write a professional and engaging news article/summary for "${title}" for the NGO "Vizioni Rinor i Shalës" (VRSH). The tone should be positive and community-focused. Do not use "**" for bolding; use clear structure instead. Language: ${language === 'AL' ? 'Albanian' : 'English'}.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.0-flash',
         contents: prompt,
       });
 
