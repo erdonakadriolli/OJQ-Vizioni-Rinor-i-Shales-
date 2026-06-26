@@ -1,0 +1,49 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == "donakadriolli@gmail.com" ||
+        request.auth.token.email == "vizioniRinoriShales@gmail.com" ||
+        request.auth.token.email == "leotrimpajaziti17@gmail.com" ||
+        request.auth.token.email == "admin@vizionirinorishales.org"
+      );
+    }
+
+    // Reports: admin only, max 10MB
+    match /reports/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // Project images and gallery
+    match /projects/{allPaths=**} {
+      allow read: if true;
+      allow write: if isAdmin() && request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // Staff photos
+    match /staff/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // Partner logos
+    match /partners/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // Site assets
+    match /assets/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin() && request.resource.size < 10 * 1024 * 1024;
+    }
+
+    // Deny everything else
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
