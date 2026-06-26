@@ -64,14 +64,7 @@ async function getFirestoreData() {
 }
 
 function needsWebSearch(message) {
-  const msg = message.toLowerCase();
-  // Kërko gjithmonë në web për pyetje rreth personave specifikë
-  const peopleQueries = ["erdona kadriolli", "leotrim pajaziti", "burim shamolli", "euresa karpuzi"];
-  if (peopleQueries.some(k => msg.includes(k))) return true;
-  // Mos kërko në web për pyetje të përgjithshme rreth organizatës
-  const internalTopics = ["vrsh", "vizioni", "shalë", "shalës", "shales", "stafi", "projektet", "lajmet", "organizata", "vullnetar", "bordi", "asambleja"];
-  if (internalTopics.some(k => msg.includes(k))) return false;
-  // Kërko në web për gjithçka tjetër
+  // Kërko gjithmonë në internet për çdo pyetje
   return true;
 }
 
