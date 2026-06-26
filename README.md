@@ -9,17 +9,19 @@ Projekti zyrtar digjital i OJQ-së **"Vizioni Rinor i Shalës"**, ndërtuar për
 ## ⚡ Veçoritë Kryesore
 
 - **🌍 Multi-Gjuhësh:** Mbështetje për Shqip dhe Anglisht.
-- **🤖 VIZIONI AI:** Asistent Inteligjent (fuqizuar nga Gemini 2.5-flash) për vizitorët.
-- **📊 Paneli Admin:** Menaxhim i plotë i projekteve, lajmeve dhe vullnetarëve.
+- **🤖 VIZIONI AI:** Asistent Inteligjent (fuqizuar nga Groq LLaMA 3.3) me kërkim në internet dhe të dhëna nga databaza në kohë reale.
+- **📊 Paneli Admin:** Menaxhim i plotë i projekteve, lajmeve, stafit dhe vullnetarëve.
 - **📱 Dizajn Modern:** Ndërfaqe interaktive dhe e përshtatshme për pajisje mobile.
+- **📂 Upload Dokumentesh:** Ngarkimi i raporteve dhe mediave drejtpërdrejt në Firebase Storage.
 
 ---
 
 ## 🛠️ Teknologjitë
 
-- **Kodi:** React.js (Vite), Tailwind CSS, Framer Motion
-- **Sistemi AI:** Vercel Serverless (Node.js) & Google Generative AI
-- **Databaza:** Firebase
+- **Kodi:** React.js (Vite), TypeScript, Tailwind CSS
+- **Sistemi AI:** Groq (LLaMA 3.3-70b) + Tavily Web Search
+- **Databaza:** Firebase Firestore + Firebase Storage
+- **Hosting:** Vercel (Serverless Functions)
 
 ---
 
@@ -27,16 +29,19 @@ Projekti zyrtar digjital i OJQ-së **"Vizioni Rinor i Shalës"**, ndërtuar për
 
 1. **Shkarko projektin:**
    ```bash
-   git clone https://github.com/erdonakadriolli/vizionirinorishales
+   git clone https://github.com/erdonakadriolli/OJQ-Vizioni-Rinor-i-Shales-
    ```
 
-2. **Instalo të dhënat:**
+2. **Instalo paketat:**
    ```bash
    npm install
    ```
 
-3. **Lidhu me AI:**
-   - Kalo në Vercel dhe shto çelësin tek Settings > Environment Variables: `GEMINI_API_KEY`.
+3. **Krijo skedarin `.env` dhe shto çelësat:**
+   ```
+   GROQ_API_KEY=...
+   TAVILY_API_KEY=...
+   ```
 
 4. **Nisja lokale:**
    ```bash
