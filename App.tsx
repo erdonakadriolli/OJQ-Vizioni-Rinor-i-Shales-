@@ -17,6 +17,7 @@ import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { FirestoreProvider } from './context/FirestoreContext';
 import { logout as firebaseLogout, auth, adminEmails } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 const Footer: React.FC = () => {
   const { t } = useLanguage();
@@ -188,6 +189,7 @@ const App: React.FC = () => {
               </Routes>
             </main>
             <Footer />
+            <SpeedInsights />
           </div>
         </HashRouter>
       </FirestoreProvider>
