@@ -125,7 +125,7 @@ ${contextBlock}`;
     }));
 
     const completion = await groq.chat.completions.create({
-      model: "llama3-70b-8192",
+      model: "openai/gpt-oss-120b",
       messages: [{ role: "system", content: systemPrompt }, ...groqMessages],
       temperature: 0.7,
       max_tokens: 1024,
