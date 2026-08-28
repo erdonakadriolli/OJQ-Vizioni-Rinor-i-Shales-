@@ -125,7 +125,7 @@ ${contextBlock}`;
     }));
 
     const completion = await groq.chat.completions.create({
-      model: "llama-3.3-70b-versatile",
+      model: "llama3-70b-8192",
       messages: [{ role: "system", content: systemPrompt }, ...groqMessages],
       temperature: 0.7,
       max_tokens: 1024,
