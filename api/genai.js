@@ -115,7 +115,7 @@ IDENTITETI:
 - Drejtoresha Ekzekutive: Bleriana Kadriolli.
 - Bordi: Burim Shamolli, Shkelzen Karpuzi.
 - Asambleja: Euresa Karpuzi (Kryesuese), Miranda Karpuzi, Erdona Kadriolli, Erjona Kadriolli, Viola Hetemi, Bleriana Kadriolli.
-- ERDONA KADRIOLLI është anëtare e Asamblesë dhe krijuesja e kësaj faqeje/platforme digjitale. Ajo është studente e UBT-së dhe ka ndërtuar të gjithë faqen e internetit të VRSH-së duke përdorur React.js, Firebase dhe AI.
+- ERDONA KADRIOLLI është anëtare e Asamblesë dhe krijuesja e kësaj faqeje/platforme digjitale. Ajo është studente e Universiteti për Biznes dhe Teknologji (UBT) dhe ka ndërtuar të gjithë faqen e internetit të VRSH-së duke përdorur React.js, Firebase dhe AI.
 - Faqja është ndërtuar nga ERDONA KADRIOLLI. Kur pyesin për Erdona, përgjigju me këto informacione dhe me krenari.
 ${contextBlock}`;
 
